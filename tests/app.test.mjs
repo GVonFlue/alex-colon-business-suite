@@ -81,14 +81,26 @@ export default async function run(t, { mount, tick, dom }) {
   t.ok(art === document.querySelector('.sb').firstElementChild,
     'as the first child, so everything else stacks above it');
 
+  /* THE CLIENT'S MARK, OR THEIR NAME. Never another client's mark.
+
+     This block used to require an <img>, which passed only because the missing
+     -logo fallback was a hard-coded '/brand/dwell-logo.png'. That is the bug it
+     was quietly protecting: every install that had not set VITE_LOGO_URL
+     rendered a DIFFERENT BROKERAGE'S artwork, and the suite called it correct.
+
+     Now: artwork when configured, a wordmark carrying the install's own name
+     when not. Both are valid; another client's file is not. */
   const sbLogo = document.querySelector('.sb-brand .sb-logo');
-  t.ok(sbLogo, "the client's mark is in the sidebar");
-  /* Either a bundled per-install asset or a hosted URL from VITE_LOGO_URL.
-     Asserting the FILENAME could only ever pass for one install, which is why
-     every fork of this template failed its own suite here. */
-  const sbSrc = (sbLogo && sbLogo.getAttribute('src')) || '';
-  t.ok(/^\/brand\/.+\.(png|jpg|jpeg|svg|webp)$/i.test(sbSrc) || /^https?:\/\//i.test(sbSrc),
-    'and it points at a per-install asset or a configured URL');
+  const sbWord = document.querySelector('.sb-brand .sb-word');
+  t.ok(sbLogo || sbWord, "the client's mark or their name is in the sidebar");
+  if (sbLogo) {
+    const sbSrc = sbLogo.getAttribute('src') || '';
+    t.ok(/^\/brand\/.+\.(png|jpg|jpeg|svg|webp)$/i.test(sbSrc) || /^https?:\/\//i.test(sbSrc),
+      'and where there is artwork it points at a per-install asset or a configured URL');
+  } else {
+    t.ok((sbWord.textContent || '').trim().length > 0,
+      'and where there is no artwork the wordmark carries the install name');
+  }
   t.ok(/business suite/i.test((document.querySelector('.sb-suite') || {}).textContent || ''),
     'with the product line stacked underneath it');
 
@@ -99,11 +111,23 @@ export default async function run(t, { mount, tick, dom }) {
   t.ok(/business suite/i.test((document.querySelector('.suite-name') || {}).textContent || ''),
     'with "Business Suite" beside it');
 
-  /* the leader seat carries a real headshot; see src/lib/people.js */
+  /* THE LEADER SEAT: a headshot when one is configured, initials otherwise.
+
+     Same failure as the logo above, one line worse. people.js pinned one
+     brokerage's face AND painted it on whoever held the leader seat, by role
+     rather than by matched email. So a fresh install put the previous client's
+     photograph on the new client's own login, and this assertion agreed.
+
+     VITE_OWNER_PHOTO_URL supplies it now. Unset means initials, which is
+     correct rather than merely safe. */
   const leaderAv = document.querySelector('.sb-av');
-  t.ok(leaderAv && leaderAv.classList.contains('has-photo'),
-    'the leader seat renders a headshot rather than initials');
-  t.ok(leaderAv && leaderAv.querySelector('img'), 'as an <img> inside the circle');
+  t.ok(leaderAv, 'the leader seat renders an avatar');
+  if (leaderAv && leaderAv.classList.contains('has-photo')) {
+    t.ok(leaderAv.querySelector('img'), 'as an <img> inside the circle when a photo is configured');
+  } else {
+    t.ok((leaderAv.textContent || '').trim().length > 0,
+      'as initials when no photo is configured, never another install\'s face');
+  }
 
   /* ------------------------------------------------- every tab, as the leader */
   const navLabels = q('.sb .nav-i').map(b => (b.textContent || '').trim()).filter(Boolean);
