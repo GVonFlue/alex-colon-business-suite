@@ -1,0 +1,28 @@
+{
+  "name": "proytech-realtor-crm",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:demo": "VITE_DEMO=1 vite",
+    "build": "vite build",
+    "build:demo": "VITE_DEMO=1 vite build",
+    "preview": "vite preview",
+    "test": "node tests/run.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.383.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8",
+    "jsdom": "^24.1.0",
+    "esbuild": "^0.21.5"
+  }
+}

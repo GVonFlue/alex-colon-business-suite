@@ -1,0 +1,31 @@
+# Runs the suite on every PR and every push to main, and fails the PR when a
+# test fails. Dwell had no CI at all: `npm test` was something a person
+# remembered to run.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push supersedes an in-flight run on a PR. Never on main — those runs
+# are the record of whether the deployed commit was green.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # npm ci, not npm install: it installs exactly the lockfile, so CI cannot
+      # quietly test a different dependency tree than the one committed.
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

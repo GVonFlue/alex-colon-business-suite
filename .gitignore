@@ -1,0 +1,14 @@
+# Nothing here is tracked today — this file is what keeps it that way once CI
+# starts running `npm ci` and `npm run build` in checkouts people also commit
+# from. A single `git add -A` in a repo without this is how eleven thousand
+# files get committed at once.
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+.vercel/
+
+# the test runner's scratch bundles
+.test-build/
