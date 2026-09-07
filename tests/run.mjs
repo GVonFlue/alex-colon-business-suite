@@ -218,6 +218,9 @@ if (!only || only === 'app') {
     try {
       const mod = await import('./app.test.mjs');
       await mod.default(t, { mount, tick, dom });
+      header('walk — every tab, what is actually on screen');
+      const walk = await import('./walk.test.mjs');
+      await walk.default(t, { mount, tick, dom });
       t.eq(errors.filter(e => /Cannot read|is not a function|is not defined|Objects are not valid/.test(e)), [],
         'no exceptions were logged while clicking through the whole app');
     } catch (e) {
