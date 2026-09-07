@@ -344,7 +344,11 @@ export default function App() {
                 it: the .sb-glow bloom lights it instead, same as the CRM. */}
             <div className="sb-brand">
               <div className="sb-glow" aria-hidden="true" />
-              <img className="sb-logo" src={ASSETS.clientLogo} alt={ASSETS.clientLogoAlt} />
+              {/* Artwork when there is artwork, the client's own name when there
+                  is not. Never another client's mark: see src/lib/assets.js. */}
+              {ASSETS.clientLogo
+                ? <img className="sb-logo" src={ASSETS.clientLogo} alt={ASSETS.clientLogoAlt} />
+                : <div className="sb-word">{BRAND.name}</div>}
               <span className="sb-suite">{isDemo ? `${PRODUCT_SHORT} · demo` : PRODUCT_SHORT}</span>
             </div>
 

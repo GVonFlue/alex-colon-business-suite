@@ -42,6 +42,16 @@ export const CSS = `
    the logo reads as lit rather than stuck on. */
 .sb-brand{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:22px 14px 18px;margin:-4px -6px 14px}
 .sb-logo{max-height:56px;max-width:184px;object-fit:contain;position:relative;z-index:1}
+/* The wordmark, when an install has no logo artwork.
+
+   Sized and positioned to occupy the same box the image would, so the sidebar
+   does not reflow when a client later supplies a real mark. Breaks on spaces
+   rather than being forced onto one line: "Alexander Colon" wants two lines at
+   184px and squeezing it to one makes it smaller than the nav labels. */
+.sb-word{position:relative;z-index:1;max-width:184px;text-align:center;
+  font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;
+  font-size:19px;line-height:1.12;letter-spacing:-.02em;color:#fff;
+  text-shadow:0 0 18px rgba(56,189,248,.35)}
 .sb-glow{position:absolute;top:-6px;left:50%;transform:translateX(-50%);
   width:190px;height:120px;pointer-events:none;
   background:radial-gradient(50% 50% at 50% 40%,rgba(56,189,248,.30),${alpha(COBALT,.16)} 45%,transparent 72%);
