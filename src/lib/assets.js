@@ -32,8 +32,17 @@ export const ASSETS = {
      point of setting it. The bundled file stays as the fallback rather than
      being deleted, because this mark renders on every page load — a slow or
      dead URL is visible at exactly the moment there is nothing to handle it. */
-  clientLogo:     BRAND.logo || '/brand/dwell-logo.png',
-  clientLogoAlt:  BRAND.short || 'dwellWICHITA',
+  /* NO CROSS-CLIENT FALLBACK. This used to fall back to '/brand/dwell-logo.png',
+     which meant any install that had not set VITE_LOGO_URL rendered ANOTHER
+     BROKERAGE'S MARK in its sidebar. It is the worst possible default: it looks
+     deliberate, it survives a build and a click-through, and the person most
+     likely to notice is the client.
+
+     Null now, and App.jsx paints a wordmark from VITE_BRAND_NAME instead. A
+     client without artwork gets their own name set properly, which is a
+     reasonable thing to ship and an obvious thing to replace. */
+  clientLogo:     BRAND.logo || null,
+  clientLogoAlt:  BRAND.short || BRAND.name,
 
   /* NOTE: there is no sidebar image. The circuit backdrop is an inline SVG in
      src/components/SidebarArt.jsx, ported from the ProyTech CRM so both

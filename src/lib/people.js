@@ -18,24 +18,27 @@
    240x240; they are rendered as a circle with object-fit:cover.
    ========================================================================== */
 
-const JEFF = '/brand/jeff-schnell.jpg';
+/* THE OWNER HEADSHOT IS PER INSTALL, AND IT IS OPT IN.
+
+   This file used to pin one brokerage's face. Combined with
+   OWNER_PHOTO_ON_LEADER below, which paints the owner photo on WHOEVER HOLDS
+   THE LEADER SEAT rather than on a matched email, every new install from this
+   template put the previous client's headshot on the new client's own login.
+   Nothing errors, nothing looks broken, and the person who notices is the
+   client looking at somebody else's face in their sidebar.
+
+   VITE_OWNER_PHOTO_URL now supplies it, and unset means no photo and initials
+   instead, which is correct rather than merely safe. */
+const OWNER_PHOTO_URL = (import.meta.env.VITE_OWNER_PHOTO_URL || '').trim() || null;
 
 /* Preferred: keyed on the Supabase Auth email, which cannot be typo'd into a
    different person the way a display name can. Add Jeff's real login here as
    soon as his seat exists and the name matches below become belt-and-braces. */
-export const BY_EMAIL = {
-  'jeff@dwellwichita.com': JEFF,
-  'jeff@dwellwichita.test': JEFF,
-};
+export const BY_EMAIL = {};
 
 /* Fallback: display name. Spelling variants are listed on purpose — the seat
    record is typed by a human and "Schell" is the common miss. */
-export const BY_NAME = {
-  'jeff schnell': JEFF,
-  'jeff schell': JEFF,
-  'jeffrey schnell': JEFF,
-  'jeff schnell jr': JEFF,
-};
+export const BY_NAME = {};
 
 /* This is a single-brokerage install and the leader seat is Jeff's. Rather than
    depend on his display name being spelled the way we guessed, whoever holds
@@ -43,8 +46,10 @@ export const BY_NAME = {
 
    Set this to false the day Dwell has a second leader, or the day you would
    rather the photo appear ONLY for an exact email match above. */
+/* Still true, and now harmless: with no URL set there is nothing to paint, so
+   an install that never sets VITE_OWNER_PHOTO_URL shows initials. */
 export const OWNER_PHOTO_ON_LEADER = true;
-export const OWNER_PHOTO = JEFF;
+export const OWNER_PHOTO = OWNER_PHOTO_URL;
 
 const norm = s => String(s || '')
   .toLowerCase()
@@ -65,7 +70,7 @@ export function photoOf(u) {
   const name = norm(u.name);
   if (name && BY_NAME[name]) return BY_NAME[name];
 
-  if (OWNER_PHOTO_ON_LEADER && u.role === 'leader') return OWNER_PHOTO;
+  if (OWNER_PHOTO_ON_LEADER && OWNER_PHOTO && u.role === 'leader') return OWNER_PHOTO;
   return null;
 }
 
