@@ -335,6 +335,34 @@ export function seedData(tz) {
   const settings = defaultSettings();
   const contacts = C.map((row, i) => mkContact(row, i, base));
 
+  /* ONE LEAD FROM THE WEBSITE, unacknowledged, so the demo shows the alert.
+
+     It is not decoration. Nothing else in this seed carries `attribution`, and
+     `attribution` is the field the new-lead alert filters on, so without this
+     row the alert renders for nobody and tests/walk.test.mjs cannot see it.
+     That is exactly how the first version shipped broken: it read the wrong
+     shape, every fixture agreed with it, and the only thing that would have
+     caught it was a real lead on screen. */
+  contacts.unshift({
+    id: 'web-lead-demo',
+    name: 'Priya Raman', email: 'priya.raman@example.test', phone: '(316) 555-0142',
+    side: 'buyer', stage: 'new', source: 'Colon - Buyer Guide Request',
+    owner_id: DEMO_USERS[0].id, pool: null, pooled_at: null,
+    created_at: d(base, 0), lastTouch: null,
+    nextAction: 'First contact attempt', nextActionDue: d(base, 0).slice(0, 10),
+    priceMin: 210000, priceMax: 265000, timeline: '60-90 days',
+    notes: 'Asked what closing costs run around here.',
+    /* written by api/lead-intake.js, flattened onto the row by getContacts() */
+    attribution: {
+      sourceTag: 'Colon - Buyer Guide Request',
+      landingRoute: '/buy',
+      externalRef: null,
+      deployment: 'production',
+      receivedAt: d(base, 0),
+    },
+    activity: [],
+  });
+
   /* the relocation side of the record, on the contacts that have one */
   PCS_FAMILIES.forEach(fam => {
     const c = contacts.find(x => x.id === slugId(fam.name));

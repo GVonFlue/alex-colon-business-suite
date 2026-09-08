@@ -304,23 +304,34 @@ export default function App() {
      does, so this can never fire for a contact typed in by hand. He does not
      need a popup telling him about a person he is looking at. */
   const newLeads = useMemo(() => (contacts || []).filter(c => {
-    const d = c.data || {};
-    /* The COLUMN is authoritative; data.stage is only a fallback for a row that
-       has never had the column set. This was `c.stage === 'new' || d.stage ===
-       'new'` and tests/newlead.test.mjs failed it: moving a lead to Contacted
-       updates the column but leaves the stale data.stage that
-       api/lead-intake.js wrote on arrival, so the OR still matched and the
-       alert would not go away for a lead already being worked. */
-    const stage = c.stage || d.stage;
-    return d.attribution && !d.seenAt && stage === 'new';
+    /* THE CONTACT IS FLAT HERE. THERE IS NO c.data.
+
+       db.getContacts() spreads the jsonb column onto the object:
+         ({ ...r.data, id, owner_id, pool, side, stage, ... })
+       so what api/lead-intake.js wrote as data.attribution arrives as
+       c.attribution. The first version of this filter read c.data.attribution,
+       which is undefined on every row, so the alert could never fire for
+       anything. A real lead reached the CRM, the email and the sheet, and this
+       was the only part that stayed silent — the worst possible failure, since
+       nothing errored and the pipeline looked correct.
+
+       Writing back is safe: contactRow() re-nests everything that is not a
+       column into data, so setting seenAt at the top level here lands in
+       data.seenAt in Postgres.
+
+       The stage COLUMN is authoritative and c.stage always exists after the
+       spread above, so there is no fallback to a stale copy. */
+    return c.attribution && !c.seenAt && c.stage === 'new';
   }).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [contacts]);
 
   /* Acknowledged means acknowledged everywhere, so it is written to the row
      rather than held in this component. See NewLeadAlert.jsx for why local
      state and localStorage both fail the requirement. */
   const acknowledgeLead = useCallback(async c => {
-    const next = { ...c, data: { ...(c.data || {}), seenAt: new Date().toISOString() } };
-    await upsertContact(next);
+    /* Flat, matching the shape getContacts() returns. contactRow() puts
+       everything that is not a column back into the data jsonb, so this lands
+       as data.seenAt and survives a refresh and a different device. */
+    await upsertContact({ ...c, seenAt: new Date().toISOString() });
   }, [upsertContact]);
 
   /* Polling, not realtime.

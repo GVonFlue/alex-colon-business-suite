@@ -68,7 +68,10 @@ export default function NewLeadAlert({ leads, onOpen, onAcknowledge }) {
   return (
     <div className="nl-wrap" role="alert" aria-live="assertive">
       {leads.map(lead => {
-        const d = lead.data || {};
+        /* Flat, not nested. db.getContacts() spreads the jsonb column onto the
+           object, so there is no lead.data to read. See the note on newLeads in
+           App.jsx for the bug this caused. */
+        const d = lead;
         const src = d.source || 'the website';
         const price = money(d.priceMax || d.price);
         return (
@@ -78,13 +81,12 @@ export default function NewLeadAlert({ leads, onOpen, onAcknowledge }) {
             <div className="nl-body">
               <div className="nl-top">
                 <b>New lead</b>
-                <span className="nl-when">{ago(d.created_at || lead.created_at)}</span>
+                <span className="nl-when">{ago(lead.created_at)}</span>
               </div>
               <div className="nl-name">{d.name || 'Someone'}</div>
               <div className="nl-meta">
                 {src}
-                {d.landingRoute || d.attribution?.landingRoute
-                  ? ' · ' + (d.landingRoute || d.attribution.landingRoute) : ''}
+                {d.attribution?.landingRoute ? ' · ' + d.attribution.landingRoute : ''}
                 {price ? ' · ' + price : ''}
               </div>
               {/* Their phone and email, plainly, so the fastest possible

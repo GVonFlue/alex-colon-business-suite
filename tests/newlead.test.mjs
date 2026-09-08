@@ -15,31 +15,38 @@
 /* Same predicate as App.jsx `newLeads`. Kept in step deliberately: if one
    changes and the other does not, these cases start failing, which is the
    cheapest possible way to find out. */
-const isUnacknowledgedWebLead = c => {
-  const d = c.data || {};
-  const stage = c.stage || d.stage;
-  return !!(d.attribution && !d.seenAt && stage === 'new');
-};
+const isUnacknowledgedWebLead = c =>
+  !!(c.attribution && !c.seenAt && c.stage === 'new');
 
-/* WHY `c.stage || d.stage` AND NOT `c.stage === 'new' || d.stage === 'new'`.
+/* THE CONTACT IS FLAT. THIS IS THE WHOLE BUG THIS FILE NOW GUARDS.
 
-   The first version was the OR, and these two cases failed it. Moving a lead to
-   Contacted updates the column but leaves the stale `data.stage: 'new'` that
-   api/lead-intake.js wrote on arrival, so the OR still matched and the alert
-   never went away. He would have had to acknowledge a lead he had already
-   started working.
+   db.getContacts() spreads the jsonb column onto the object:
 
-   The column is authoritative and data.stage is only a fallback for a row that
-   has never had one set. Preferring the column, then falling back, is the whole
-   fix. */
+     ({ ...r.data, id, owner_id, pool, side, stage, pooled_at, created_at })
+
+   So what api/lead-intake.js writes as data.attribution arrives as
+   c.attribution. The first version of this predicate read c.data.attribution,
+   which is undefined on EVERY row, so the alert could never fire for anything.
+
+   It shipped. A real lead reached the CRM, the email and the Google Sheet, and
+   the alert stayed silent. Nothing errored, nothing looked broken, and the
+   fixtures below were the reason: they were hand-written with a nested `data`
+   object, so the tests passed against a shape the database never returns.
+
+   FIXTURES NOW MATCH db.getContacts() EXACTLY. A fixture that does not match
+   its source is not a test, it is a second bug agreeing with the first.
+
+   The stage COLUMN is authoritative and always present after the spread, so
+   there is no fallback to a stale copy inside the jsonb.  */
 
 const webLead = (over = {}) => ({
-  id: 'c1', stage: 'new', created_at: '2026-09-07T18:00:00.000Z',
-  data: {
-    name: 'Intake Test', email: 'a@b.test', stage: 'new',
-    attribution: { sourceTag: 'Colon - Buyer Guide Request', landingRoute: '/buy', deployment: 'production' },
-    ...over,
-  },
+  /* Exactly the shape db.getContacts() returns: columns and jsonb, flattened. */
+  id: 'c1', owner_id: 'u1', pool: null, side: 'buyer', stage: 'new',
+  created_at: '2026-09-07T18:00:00.000Z',
+  name: 'Intake Test', email: 'a@b.test', phone: '(316) 555-0100',
+  source: 'Colon - Lark Assistant',
+  attribution: { sourceTag: 'Colon - Lark Assistant', landingRoute: '/buy', deployment: 'production' },
+  ...over,
 });
 
 export default async function run(t) {
@@ -48,8 +55,10 @@ export default async function run(t) {
   t.ok(isUnacknowledgedWebLead(webLead()),
     'a fresh website lead raises the alert');
 
-  t.ok(isUnacknowledgedWebLead({ ...webLead(), stage: undefined }),
-    'and it still fires when the stage lives only on data, which is how api/lead-intake.js writes it');
+  /* The regression this file exists for. A nested `data` object is what the
+     broken fixtures looked like, and it is what the database never returns. */
+  t.ok(!isUnacknowledgedWebLead({ id: 'x', stage: 'new', data: { attribution: { sourceTag: 'x' } } }),
+    'a NESTED contact does not fire, because getContacts() never returns that shape and a fixture that does is lying');
 
   /* --------------------------------------------------- it stops on action */
 
@@ -65,23 +74,30 @@ export default async function run(t) {
 
   /* ------------------------------------------------- it does NOT overfire */
 
-  t.ok(!isUnacknowledgedWebLead({ id: 'x', stage: 'new', data: { name: 'Typed by hand' } }),
+  t.ok(!isUnacknowledgedWebLead({ id: 'x', stage: 'new', name: 'Typed by hand' }),
     'a contact typed in by hand never raises an alert, because it has no attribution');
 
   /* The column moves, data.stage stays stale. That IS the real-world shape:
      nothing rewrites data.stage when a card is dragged, so a filter that trusts
      it keeps alerting on a lead already being worked. */
-  const moved = webLead();
-  moved.stage = 'contacted';
-  t.ok(moved.data.stage === 'new', 'the fixture keeps the stale data.stage on purpose');
-  t.ok(!isUnacknowledgedWebLead(moved),
-    'a website lead already moved down the pipeline does not raise an alert, even with a stale data.stage');
+  t.ok(!isUnacknowledgedWebLead(webLead({ stage: 'contacted' })),
+    'a website lead already moved down the pipeline does not raise an alert');
 
   t.ok(!isUnacknowledgedWebLead({ ...webLead(), stage: 'closed' }),
     'and neither does a closed one');
 
   t.ok(!isUnacknowledgedWebLead({ id: 'x' }),
-    'a row with no data object does not throw and does not alert');
+    'a bare row does not throw and does not alert');
+
+  /* The exact row api/lead-intake.js produced in production, read back through
+     getContacts(). If this ever fails, the alert is silent on real leads. */
+  t.ok(isUnacknowledgedWebLead({
+    id: '1573a918-7921-431d-ab3b-f2012fc12ba4', owner_id: 'u1', pool: null,
+    side: 'buyer', stage: 'new', created_at: '2026-09-07T18:00:00.000Z',
+    name: 'Intake Test', email: 'intake-test@example.test',
+    source: 'Colon - Buyer Guide Request',
+    attribution: { sourceTag: 'Colon - Buyer Guide Request [local]', landingRoute: '/buy', deployment: 'local' },
+  }), 'the real row that reached production fires the alert');
 
   /* ------------------------------------------------------------- ordering */
 
@@ -104,7 +120,7 @@ export default async function run(t) {
      by data.attribution.deployment rather than being suppressed, because a
      suppressed test lead is indistinguishable from a broken endpoint. */
   const previewLead = webLead();
-  previewLead.data.attribution.deployment = 'preview';
+  previewLead.attribution = { ...previewLead.attribution, deployment: 'preview' };
   t.ok(isUnacknowledgedWebLead(previewLead),
     'a preview lead still alerts, so a test submission proves the whole path rather than half of it');
 }
