@@ -72,6 +72,55 @@ export async function spentThisMonth(bucket) {
   return rows.reduce((a, r) => a + (Number(r && r.cost) || 0), 0);
 }
 
+/**
+ * Dollars spent across EVERY bucket since midnight UTC.
+ *
+ * Deliberately not per-bucket. The question worth answering is "what did AI
+ * cost today", not "what did each endpoint cost today", and four separate
+ * two-dollar caps is an eight dollar day nobody chose. Every call still logs
+ * its own bucket, so the split is a `group by` away whenever somebody wants
+ * it — the cap is shared, the reporting is not.
+ *
+ * Midnight UTC, matching spentThisMonth() above. A local-midnight window and a
+ * UTC-midnight window give two different answers to the same question, and one
+ * clock that is not local beats two clocks that disagree.
+ */
+export async function spentToday() {
+  const from = new Date().toISOString().slice(0, 10) + 'T00:00:00.000Z';
+  const rows = await sb(`api_hits?at=gte.${from}&select=cost`);
+  // Unreachable ledger reports null. See withinDailyCap for what is done with
+  // that, which is a decision and not a default.
+  if (rows === null) return null;
+  return rows.reduce((a, r) => a + (Number(r && r.cost) || 0), 0);
+}
+
+/** The configured daily ceiling in dollars, or null for no cap. */
+export function dailyCap() {
+  const v = Number(process.env.AI_DAILY_CAP_USD);
+  return isFinite(v) && v > 0 ? v : null;
+}
+
+/**
+ * Whether anything in this install may spend right now.
+ *
+ * FAILS OPEN when the ledger cannot be read, loudly. A CRM whose AI stops
+ * working because a select timed out is a worse outcome than an unenforced cap
+ * for one request. Silence would be worse than either, so it logs every time.
+ *
+ * It is a ceiling and not a budget: spending stops within one call of crossing
+ * it, never exactly on it, because a call's cost is only known once it is made.
+ */
+export async function withinDailyCap() {
+  const cap = dailyCap();
+  if (cap === null) return { allowed: true, spent: null, cap: null };
+  const spent = await spentToday();
+  if (spent === null) {
+    console.error('[spend] the ledger is unreachable, so the daily cap is NOT enforced for this request.');
+    return { allowed: true, spent: null, cap };
+  }
+  return { allowed: spent < cap, spent, cap };
+}
+
 /** Record what a call cost. Best effort — a failed write must never fail the
  *  user's request, they already paid for the tokens. */
 export async function logSpend(bucket, cost) {

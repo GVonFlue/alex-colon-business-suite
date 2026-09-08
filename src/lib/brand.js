@@ -15,7 +15,11 @@
    ============================================================ */
 
 const val = (v, d) => { const s = (v ?? '').toString().trim(); return s ? s : d; };
-const NAME = val(import.meta.env.VITE_BRAND_NAME, 'Dwell Real Estate Group');
+/* NO CLIENT NAME AS A DEFAULT. This was 'Dwell Real Estate Group', so any
+   install that forgot VITE_BRAND_NAME rendered another brokerage's name — the
+   same class of bug as the logo and headshot fallbacks in assets.js and
+   people.js, and the same reason it survives review: it looks deliberate. */
+const NAME = val(import.meta.env.VITE_BRAND_NAME, 'Business Suite');
 
 /* The product name, shown at the top of every screen. The client's own brand
    lives in the sidebar; this is ours and it stays put. */
@@ -30,7 +34,7 @@ export const BRAND = {
   id:       val(import.meta.env.VITE_BRAND_ID, 'proytech'),
   name:     NAME,
   title:    val(import.meta.env.VITE_APP_TITLE, NAME + ' — ProyTech Business Suite'),
-  short:    val(import.meta.env.VITE_BRAND_SHORT, 'dwellWICHITA'),
+  short:    val(import.meta.env.VITE_BRAND_SHORT, ''),
 
   /* The sidebar mark. Read by src/lib/assets.js, which prefers this when set
      and falls back to the bundled file in /public/brand otherwise — so an
@@ -73,7 +77,7 @@ export const BRAND = {
   biz: {
     name:    val(import.meta.env.VITE_BIZ_NAME, NAME),
     address: val(import.meta.env.VITE_BIZ_ADDRESS, '150 N Main St\nWichita, KS 67202').replace(/\\n/g, '\n'),
-    email:   val(import.meta.env.VITE_BIZ_EMAIL, 'hello@dwellwichita.test'),
+    email:   val(import.meta.env.VITE_BIZ_EMAIL, ''),
     phone:   val(import.meta.env.VITE_BIZ_PHONE, '(316) 555-0140'),
     license: val(import.meta.env.VITE_BIZ_LICENSE, ''),
   },

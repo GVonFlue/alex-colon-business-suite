@@ -177,7 +177,7 @@ export default async function handler(req, res) {
   /* a scanned contract, same reasoning as the receipt above. Signed-in users only: before this, anyone who found
      the URL could spend this install's Anthropic key. */
   const gate = await guard(req, res, {
-    name: 'extract-contract', perIp: 20, windowMin: 10, perDay: 400,
+    name: 'extract-contract', perIp: 20, windowMin: 10, perDay: 400, spends: true,
     maxChars: 8000000, requireAuth: true,
   });
   if (!gate.ok) return;

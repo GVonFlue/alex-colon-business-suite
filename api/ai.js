@@ -475,7 +475,7 @@ export default async function handler(req, res) {
   /* net sheets and offer comparisons — several per listing appointment, so perIp is generous. Signed-in users only: before this, anyone who found
      the URL could spend this install's Anthropic key. */
   const gate = await guard(req, res, {
-    name: 'ai', perIp: 40, windowMin: 10, perDay: 1500,
+    name: 'ai', perIp: 40, windowMin: 10, perDay: 1500, spends: true,
     maxChars: 200000, requireAuth: true,
   });
   if (!gate.ok) return;

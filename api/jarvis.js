@@ -113,7 +113,7 @@ export default async function handler(req, res) {
   // legitimate body — but only to roughly one big install's worth, not to
   // unlimited.
   const gate = await guard(req, res, {
-    name: 'jarvis', perIp: 40, windowMin: 10, perDay: 1200,
+    name: 'jarvis', perIp: 40, windowMin: 10, perDay: 1200, spends: true,
     maxChars: 400000, requireAuth: true,
   });
   if (!gate.ok) return;

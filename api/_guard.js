@@ -1,4 +1,5 @@
 import { SUPA_KEY, SUPA_URL } from './_env.js';
+import { withinDailyCap } from './_spend.js';
 // api/_guard.js — rate limiting and spend protection for every AI endpoint.
 //
 // The threat isn't a clever attacker, it's a cheap one: a loop calling a public
@@ -252,6 +253,32 @@ export async function guard(req, res, opts = {}) {
       error: `Too many requests. Try again in ${windowMin} minutes.`,
     });
     return { ok: false };
+  }
+
+  /* --- 6. the daily dollar ceiling -----------------------------------------
+     Last, and shared across every endpoint.
+
+     Here rather than in each route because all four AI endpoints already call
+     guard(), so one check covers ai, extract-contract, parse-receipt and
+     jarvis. Four separate caps would be four times the ceiling nobody chose.
+
+     Opt in per route with `spends: true`, so adding a cheap non-AI endpoint
+     later does not accidentally make it consume the AI budget.
+
+     After the auth and rate checks on purpose: a caller who is not allowed in
+     should never be able to read the budget, and a request that is about to be
+     rate limited has not spent anything. */
+  if (opts.spends) {
+    const budget = await withinDailyCap();
+    if (!budget.allowed) {
+      res.status(200).json({
+        ok: false, capped: true,
+        spent: Math.round(budget.spent * 100) / 100,
+        cap: budget.cap,
+        error: `Today's AI budget of $${budget.cap} is used up. It resets at midnight UTC.`,
+      });
+      return { ok: false };
+    }
   }
 
   return { ok: true, ip, user, leader, used: one.used, of: one.of };

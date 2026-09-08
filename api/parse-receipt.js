@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   /* a receipt photo arrives base64-encoded, so maxChars is sized for an image rather than for text. Signed-in users only: before this, anyone who found
      the URL could spend this install's Anthropic key. */
   const gate = await guard(req, res, {
-    name: 'parse-receipt', perIp: 30, windowMin: 10, perDay: 900,
+    name: 'parse-receipt', perIp: 30, windowMin: 10, perDay: 900, spends: true,
     maxChars: 8000000, requireAuth: true,
   });
   if (!gate.ok) return;
