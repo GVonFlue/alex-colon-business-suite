@@ -42,6 +42,7 @@ import Books from './views/Books';
 import Tools from './views/Tools';
 import Huddle from './views/Huddle';
 import SettingsView from './views/Settings';
+import NewLeadAlert from './NewLeadAlert';
 
 const ICONS = {
   assistant: Bot, tasks: ListTodo, activity: Activity,
@@ -291,6 +292,66 @@ export default function App() {
 
   const go = useCallback((v, p) => { setView(v); setParams(p || {}); setNavOpen(false); window.scrollTo?.(0, 0); }, []);
 
+  /* ------------------------------------------------------- new lead alert
+     Leads that arrived from the website and have not been acknowledged.
+
+     THE FILTER IS THE FEATURE. `data.seenAt` is written the moment he acts on
+     the alert, so this list empties by acknowledgement rather than by time.
+     A lead that arrives during a showing is still on screen that evening,
+     which is the entire point.
+
+     `data.attribution` is what api/lead-intake.js writes and nothing else
+     does, so this can never fire for a contact typed in by hand. He does not
+     need a popup telling him about a person he is looking at. */
+  const newLeads = useMemo(() => (contacts || []).filter(c => {
+    const d = c.data || {};
+    /* The COLUMN is authoritative; data.stage is only a fallback for a row that
+       has never had the column set. This was `c.stage === 'new' || d.stage ===
+       'new'` and tests/newlead.test.mjs failed it: moving a lead to Contacted
+       updates the column but leaves the stale data.stage that
+       api/lead-intake.js wrote on arrival, so the OR still matched and the
+       alert would not go away for a lead already being worked. */
+    const stage = c.stage || d.stage;
+    return d.attribution && !d.seenAt && stage === 'new';
+  }).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [contacts]);
+
+  /* Acknowledged means acknowledged everywhere, so it is written to the row
+     rather than held in this component. See NewLeadAlert.jsx for why local
+     state and localStorage both fail the requirement. */
+  const acknowledgeLead = useCallback(async c => {
+    const next = { ...c, data: { ...(c.data || {}), seenAt: new Date().toISOString() } };
+    await upsertContact(next);
+  }, [upsertContact]);
+
+  /* Polling, not realtime.
+
+     Supabase realtime would be instant and needs replication enabled on the
+     table, which is one more thing to get right per install and one more thing
+     to silently be off. This is a lead alert, not a chat: forty five seconds
+     late is not late. It also only runs while the tab is visible, and it
+     refetches immediately on focus, so coming back to the laptop shows the
+     alert straight away rather than up to a poll interval later.
+
+     Worth revisiting as realtime the day somebody is annoyed by the delay. */
+  useEffect(() => {
+    if (!me || DEMO) return undefined;
+    let stop = false;
+    const refresh = async () => {
+      if (stop || document.hidden) return;
+      try { const cs = await db.getContacts(); if (!stop && cs) setContacts(cs); }
+      catch (err) { console.error('lead poll failed', err); }
+    };
+    const id = setInterval(refresh, 45000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      stop = true;
+      clearInterval(id);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [me]);
+
   /* --------------------------------------------------------------- the ctx */
   const tz = tzOf(settings);
   const ctx = useMemo(() => ({
@@ -430,6 +491,15 @@ export default function App() {
         </div>
       </div>
       {toast && <div className="cel still"><div className="cel-ic"><ShieldCheck size={16} /></div>{toast}</div>}
+      {/* Above every view and above the toast layer: a lead that arrives while
+          a drawer is open still has to be seen. */}
+      {me && (
+        <NewLeadAlert
+          leads={newLeads}
+          onAcknowledge={acknowledgeLead}
+          onOpen={c => go('contacts', { id: c.id })}
+        />
+      )}
     </>
   );
 }

@@ -41,6 +41,44 @@ export const CSS = `
    bloom below does the same job the bright node does in the reference art, so
    the logo reads as lit rather than stuck on. */
 .sb-brand{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:22px 14px 18px;margin:-4px -6px 14px}
+
+/* ---------------------------------------------------------- new lead alert
+   Fixed, top right, above everything including the modal layer: a lead that
+   arrives while a drawer is open still has to be seen. Constrained width so it
+   never covers the nav, and it drops to full width on a phone where there is
+   no room to be polite about it. */
+.nl-wrap{position:fixed;top:14px;right:14px;z-index:9000;display:flex;flex-direction:column;gap:10px;
+  width:min(384px,calc(100vw - 28px));pointer-events:none}
+.nl{pointer-events:auto;display:flex;gap:12px;align-items:flex-start;
+  background:#fff;border:1px solid ${alpha(COBALT,.34)};border-left:4px solid ${COBALT};
+  border-radius:14px;padding:13px 14px;
+  box-shadow:0 18px 44px -14px ${alpha(INK,.34)},0 2px 6px ${alpha(INK,.08)};
+  animation:nlIn .34s cubic-bezier(.16,1,.3,1)}
+@keyframes nlIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nl{animation:none}}
+.nl-ic{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  background:${alpha(COBALT,.12)};color:${COBALT}}
+.nl-body{flex:1;min-width:0}
+.nl-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.nl-top b{font-family:'Space Grotesk';font-size:12px;letter-spacing:.02em;color:${COBALT};text-transform:uppercase}
+.nl-when{font-family:'Space Mono',ui-monospace,monospace;font-size:10px;color:${alpha(INK,.62)}}
+.nl-name{font-family:'Space Grotesk';font-weight:700;font-size:16px;color:${INK};
+  margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-meta{font-size:12px;color:${alpha(INK,.62)};margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-contact{font-size:12.5px;margin-top:5px}
+.nl-contact a{color:${COBALT};text-decoration:none;font-weight:600}
+.nl-contact a:hover{text-decoration:underline}
+.nl-dot{color:${alpha(INK,.62)};margin:0 6px}
+.nl-acts{display:flex;flex-direction:column;gap:6px;flex:none}
+.nl-open{display:inline-flex;align-items:center;gap:5px;background:${COBALT};color:#fff;border:none;
+  border-radius:8px;font:inherit;font-size:12.5px;font-weight:700;padding:7px 11px;cursor:pointer;white-space:nowrap}
+.nl-open:hover{filter:brightness(1.08)}
+.nl-open:disabled,.nl-ack:disabled{opacity:.5;cursor:default}
+.nl-ack{display:inline-flex;align-items:center;gap:4px;background:transparent;color:${alpha(INK,.62)};
+  border:1px solid #E2E5EF;border-radius:8px;font:inherit;font-size:11.5px;font-weight:600;
+  padding:5px 9px;cursor:pointer;white-space:nowrap}
+.nl-ack:hover{color:${INK};border-color:#C7CCDA}
 .sb-logo{max-height:56px;max-width:184px;object-fit:contain;position:relative;z-index:1}
 /* The wordmark, when an install has no logo artwork.
 

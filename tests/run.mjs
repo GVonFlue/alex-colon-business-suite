@@ -218,6 +218,10 @@ if (!only || only === 'app') {
     try {
       const mod = await import('./app.test.mjs');
       await mod.default(t, { mount, tick, dom });
+      header('new lead alert — which leads fire it, and when they stop');
+      const nl = await import('./newlead.test.mjs');
+      await nl.default(t);
+
       header('walk — every tab, what is actually on screen');
       const walk = await import('./walk.test.mjs');
       await walk.default(t, { mount, tick, dom });
