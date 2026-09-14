@@ -58,7 +58,33 @@ export default function ActivityView({ ctx }) {
     from, to,
   }), [ctx.contacts, ctx.tasks, preset, who, canSeeOthers, me.id, from, to]);
 
-  const days_ = useMemo(() => byDay(stream), [stream]);
+  /*
+   * A per-kind filter, and the counts that make it worth having.
+   *
+   * ProyTech's activity screen leads with a strip of totals — logged, calls,
+   * texts, meetings, notes — and that strip is most of why it reads as a
+   * record rather than a feed. A bare reverse-chronological list answers "what
+   * happened"; the counts answer "how much of it", which is the question
+   * somebody opens this screen with.
+   *
+   * Counts come from the stream AFTER the date and person filters and BEFORE
+   * the kind filter, so clicking Calls does not reduce the other numbers to
+   * zero and leave nothing to click back to.
+   */
+  const [kind, setKind] = useState('all');
+
+  const counts = useMemo(() => {
+    const c = { all: stream.length };
+    for (const e of stream) c[e.kind] = (c[e.kind] || 0) + 1;
+    return c;
+  }, [stream]);
+
+  const shown = useMemo(
+    () => (kind === 'all' ? stream : stream.filter(e => e.kind === kind)),
+    [stream, kind],
+  );
+
+  const days_ = useMemo(() => byDay(shown), [shown]);
   const nameOf = id => {
     const u = (ctx.users || []).find(x => x.id === id);
     return (u && (u.name || u.email)) || '';
@@ -92,7 +118,28 @@ export default function ActivityView({ ctx }) {
     >
       <div className="ac-range">{fmtShort(from)} – {fmtShort(to)} · {stream.length} entr{stream.length === 1 ? 'y' : 'ies'}</div>
 
-      {!stream.length && (
+      {stream.length > 0 && (
+        <div className="ac-chips">
+          <button className={'ac-chip' + (kind === 'all' ? ' on' : '')} onClick={() => setKind('all')}>
+            All<span className="ac-chip-n">{counts.all}</span>
+          </button>
+          {/* Ordered by what Alex actually does, not alphabetically. A kind with
+              nothing in it is not rendered: an empty chip is a dead control. */}
+          {['call', 'text', 'email', 'appointment', 'note', 'feedback', 'task', 'import']
+            .filter(k => counts[k])
+            .map(k => (
+              <button
+                key={k}
+                className={'ac-chip' + (kind === k ? ' on' : '')}
+                onClick={() => setKind(kind === k ? 'all' : k)}
+              >
+                {LABEL[k] || k}<span className="ac-chip-n">{counts[k]}</span>
+              </button>
+            ))}
+        </div>
+      )}
+
+      {!shown.length && (
         <Empty>
           {preset === 'done'
             ? 'Nothing logged in this window. Logging a call on a contact puts it here.'

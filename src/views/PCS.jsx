@@ -558,7 +558,7 @@ function FamilyModal({ ctx, c, cfg, offsets, statuses, sq, onClose }) {
       </>}
       badges={<>
         <span className={'pcs-dir ' + d.key}>{d.label}</span>
-        <Pill color="${BRAND.colors.cobalt}">{statuses.includes(p.status) ? p.status : statuses[0]}</Pill>
+        <Pill color={BRAND.colors.cobalt}>{statuses.includes(p.status) ? p.status : statuses[0]}</Pill>
         {isDate(p.reportDate)
           ? <Tag>RNLTD {fmtShort(p.reportDate)} · {sq && sq.known ? (sq.have < 0 ? whenWords(sq.have) : `in ${dayWord(sq.have)}`) : ''}</Tag>
           : <Tag>no report date</Tag>}

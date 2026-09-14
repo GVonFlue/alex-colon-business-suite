@@ -577,8 +577,8 @@ function ExpenseModal({ ctx, initial, cats, rate, onClose }) {
               icon={scanning ? <Loader2 size={13} className="spin" /> : <ScanLine size={13} />}>
               {scanning ? 'Reading it' : 'Scan it and pre-fill'}
             </Btn>
-            {file && <Pill color="${BRAND.colors.cobalt}"><FileText size={11} /> {file.name}</Pill>}
-            {!file && e.receiptPath && <Pill color="${BRAND.colors.green}"><FileText size={11} /> file on record</Pill>}
+            {file && <Pill color={BRAND.colors.cobalt}><FileText size={11} /> {file.name}</Pill>}
+            {!file && e.receiptPath && <Pill color={BRAND.colors.green}><FileText size={11} /> file on record</Pill>}
             {file && (
               <button className="ex-del" title="Clear the file" onClick={() => { setFile(null); setDataUrl(''); setScanErr(''); }}>
                 <X size={14} />

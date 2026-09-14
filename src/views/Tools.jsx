@@ -366,7 +366,7 @@ function ListingPanel({ ctx, aiOn, setAiOn }) {
   return (
     <Card
       sub="Pick the seller or the listing, check the details, set your MLS character limit. Output is a draft you edit."
-      right={record ? <Pill color="${BRAND.colors.cobalt}">{contact ? contact.name : txn.address}</Pill> : null}>
+      right={record ? <Pill color={BRAND.colors.cobalt}>{contact ? contact.name : txn.address}</Pill> : null}>
 
       <div className="fgrid">
         <Field label="Prefill from" full>
@@ -514,7 +514,7 @@ function NetSheetPanel({ ctx, aiOn, setAiOn }) {
   return (
     <Card
       sub="Every figure below is arithmetic done on this screen. The model only writes the plain-language notes — it never touches a number."
-      right={<Pill color="${BRAND.colors.green}">{usd(calc.net)} net</Pill>}>
+      right={<Pill color={BRAND.colors.green}>{usd(calc.net)} net</Pill>}>
 
       <div className="fgrid">
         <Field label="Prefill from a listing" full>
@@ -689,7 +689,7 @@ function OfferPanel({ ctx, aiOn, setAiOn }) {
   return (
     <Card
       sub="Two to four offers on one listing, side by side on what the seller actually nets. Net proceeds are computed here; the model writes the terms and risk columns."
-      right={priced.length ? <Pill color="${BRAND.colors.cobalt}">{priced.length} priced</Pill> : null}>
+      right={priced.length ? <Pill color={BRAND.colors.cobalt}>{priced.length} priced</Pill> : null}>
 
       <div className="fgrid">
         <Field label="Listing" full>
@@ -714,7 +714,7 @@ function OfferPanel({ ctx, aiOn, setAiOn }) {
         <div key={o.id} style={{ border: '1px solid #E8E9F2', borderRadius: 14, padding: 14, marginTop: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <b style={{ fontSize: 13.5 }}>{o.label || `Offer ${i + 1}`}</b>
-            <Pill color="${BRAND.colors.green}">{usd(rowsBase[i].netProceeds)} net</Pill>
+            <Pill color={BRAND.colors.green}>{usd(rowsBase[i].netProceeds)} net</Pill>
             {offers.length > 2 && (
               <Btn sm kind="d" style={{ marginLeft: 'auto' }} onClick={() => setOffers(list => list.filter(x => x.id !== o.id))} icon={<X size={13} />}>Remove</Btn>
             )}
@@ -1179,7 +1179,7 @@ function FeedbackPanel({ ctx, aiOn, setAiOn }) {
   return (
     <Card
       sub="Feedback lives on the seller's timeline as feedback entries. Log it as it comes in, compile it once a week."
-      right={contact ? <Pill color="${BRAND.colors.cobalt}">{entries.length} logged</Pill> : null}>
+      right={contact ? <Pill color={BRAND.colors.cobalt}>{entries.length} logged</Pill> : null}>
 
       <div className="fgrid">
         <Field label="Listing / seller" full>

@@ -1,116 +1,96 @@
-CRM — the four gaps from the onboarding audit.
+CRM — Tasks and Activity rebuilt, plus a real bug found on the way.
+
+This zip also carries the four onboarding gaps from the previous one. If you
+have not uploaded that yet, this supersedes it — upload this instead.
 
 UPLOAD
-  Drag the THREE FOLDERS -- api, src, tests -- on together. Do not open them.
+  Drag the FOUR FOLDERS -- api, src, tests -- on together. Do not open them.
   Commit, then redeploy. Nothing to delete.
   Do not drag this file in.
 
 --------------------------------------------------------------------------
-1. SPEED TO LEAD, AND STAGE TIMINGS   src/lib/velocity.js  (new)
+THE BUG. 22 BROKEN PILLS ACROSS SIX SCREENS.
 --------------------------------------------------------------------------
 
-His words: "I especially want first-response time tracked because
-speed-to-lead matters." None of it existed.
+    <Pill color="${BRAND.colors.indigo}">
 
-Pure functions, no React and no database, so every screen that ever shows a
-timing gets the same answer from the same place. Two screens computing "days
-to close" two different ways is how a CRM starts disagreeing with itself.
+In JSX that is a PLAIN STRING, not a template literal. Every one of those
+pills was handed the eleven characters "${BRAND.co..." as a CSS colour, which
+is invalid, so the browser dropped it and the pill fell back to grey.
 
-NOTHING NEW IS RECORDED. Every contact already carries created_at and an
-activity array with an `at` and a `kind`, so these are derivable for leads
-that already exist. No migration, no backfill.
+Twenty-two of them, in Dashboard, Commission, Tools, Books, PCS and Tasks.
+That is a real part of why these screens looked washed out: the colour coding
+that was supposed to separate overdue from upcoming, won from lost, simply was
+not painting. Fixed to color={BRAND.colors.indigo} everywhere.
 
-THE ONE DECISION EVERYTHING RESTS ON: a NOTE is not a response.
-api/lead-intake.js writes a note the instant a website lead lands. If notes
-counted, every website lead would read as answered in zero seconds and the
-metric would be measuring how fast the webhook fired rather than how fast Alex
-called. Only a call, text, email or meeting counts.
-
-MEDIAN, NOT MEAN. One lead that sat over a holiday drags a mean far enough to
-make a good month look bad. Median of 1, 3 and 11 hours is 3; the mean is 5.
-
-NULL IS NOT ZERO. "Answered instantly" and "never answered" are opposite
-facts. Null renders as an em dash, and humanHours(0) returns "1 min" rather
-than "0" so it can never be misread as instant.
+It builds clean either way, which is why it survived. Nothing errors when you
+give an element an invalid colour.
 
 --------------------------------------------------------------------------
-2. THE DASHBOARD SECTION   "Speed to lead & lost reasons"
+TASKS, REBUILT
 --------------------------------------------------------------------------
 
-Left half is the working one: leads still waiting on a first attempt, longest
-first, red past 24 hours. A median over last quarter is a report; three leads
-sitting since Tuesday is something to do before lunch. The median sits small
-beside it for context.
+  a filter bar with live counts: Open / Done, then All, Overdue, Today,
+    Next 7, No date -- counted over OPEN tasks, because a chip that counts
+    finished work is a chip nobody clicks twice
+  a FOCUS list, capped at 6, above everything else
+  per-row actions: focus, dials, delete
+  impact / urgency / effort on manual tasks
 
-Right half is where leads fall out, grouped by the reason recorded at the
-time. Contract-to-close, closed deals only, underneath.
+FOCUS IS PORTED WHOLE FROM PROYTECH, because the mechanism is better than a
+boolean: it stores the DAY it was set rather than true, so it expires on its
+own with no nightly job, no timer, and it is still correct if nobody opens the
+CRM for three days. The day rolls at 4am so working late does not clear the
+list out from under you mid-evening. Picking a task counts once per day
+however many times it is toggled.
 
-It registers in DASH_SECTIONS, and reconcileOrder() inserts a new key at its
-canonical position rather than appending -- so it appears in the right place
-on an install that already has a saved dashboard order.
+WHAT I DID NOT PORT, AND WHY. ProyTech scores EVERY task on three dials and
+AI-ranks over them. That exists because ProyTech's tasks are freeform and
+mostly undated -- something has to decide what comes first.
 
---------------------------------------------------------------------------
-3. LOST REASONS, AND MOTIVATION
---------------------------------------------------------------------------
+Half the tasks here are not freeform. Contracts.jsx writes one per contract
+deadline, off a real clause, with a real date. The date already IS the
+urgency, and asking somebody to score a task the contract scored is work for
+its own sake. So the dials appear on MANUAL tasks and never on deadline ones,
+and Focus orders each by what is actually known about it: a deadline by how
+close its date is, a manual one by impact times urgency.
 
-His eight reasons verbatim, plus Other. The field appears on the contact ONLY
-when the stage is one the settings mark as lost -- not on a hardcoded 'lost'
-key, so a renamed or added lost stage still collects it.
-
-NOT enforced as a blocking validation, deliberately. A required field on the
-way out of a record somebody is trying to close teaches them to pick the first
-option in the list, and a wrong reason looks like data in a way a blank does
-not. Blanks are counted and reported SEPARATELY from "Other" for the same
-reason: "Other" is a reason somebody chose, blank is one nobody recorded.
-
-MOTIVATION was the one field on his list that existed nowhere. Ten options,
-editable in Settings. The intake leaves it blank rather than guessing from
-which form they filled in -- Alex fills it on the first call, which is when he
-finds out.
-
-Both lists are editable in Settings under "Lead sources and picklists".
+Deliberately NOT one blended score across both. A contract deadline three days
+out and a typed task somebody rated 5 are not comparable quantities, and
+pretending they are produces a confident ordering nobody can explain.
 
 --------------------------------------------------------------------------
-4. NEW LEADS NOW EMAIL HIM   api/lead-intake.js
+ACTIVITY
 --------------------------------------------------------------------------
 
-THIS IS THE ONE WITH CONSEQUENCES TODAY. The intake stored the contact and
-stopped. The email Alex actually receives comes from the Apps Script on the
-WEBSITE'S sheet webhook -- so if that path ever changed, his notifications
-would go silent and the CRM would not have covered for it.
+A counts strip with per-kind filtering: All, Calls, Texts, Emails,
+Appointments, Notes, Feedback, Tasks, Imports. Ordered by what Alex actually
+does rather than alphabetically, and a kind with nothing in it is not rendered
+at all -- an empty chip is a dead control.
 
-Not routed through api/notify.js: that handler requires a Supabase session,
-which a server-to-server webhook does not have and should not be given.
+Counts are computed AFTER the date and person filters but BEFORE the kind
+filter, so clicking Calls does not zero the other numbers and leave nothing to
+click back to.
 
-Not awaited. The website gives this endpoint eight seconds and never retries,
-so a slow mail provider must never be why a lead fails to store. The row is
-saved before the email fires.
-
-TO TURN IT ON, set three env vars on the CRM project:
-    RESEND_API_KEY      a Resend key
-    NOTIFY_FROM         a verified sender, e.g. leads@getproytech.com
-    NOTIFY_TO           Alex@athomewichita.com
-Unconfigured it logs one line and returns. The lead still lands in the CRM,
-the sheet and the Apps Script email either way, so this is safe to upload
-before the keys exist.
+A bare reverse-chronological list answers "what happened". The counts answer
+"how much of it", which is the question somebody opens this screen with.
 
 --------------------------------------------------------------------------
-WHAT I DID NOT BUILD
+ONE THING WORTH KNOWING
 --------------------------------------------------------------------------
 
-COST PER LEAD / APPOINTMENT / CLOSING, and campaign-level attribution. It
-needs marketing spend tied to sources and a campaign field on the contact, and
-it is the largest of the four. Worth noting the CRM ALREADY has source ROI by
-closed GCI on the dashboard -- what is missing is the cost side, not the whole
-report.
+The tab walker reports Tasks at 221 characters in the DEMO build, because the
+demo seed contains no tasks and no activity. That is part of why those two
+screens looked so bare when you clicked through. Alex's real install has the
+seeded data, so it will not look like that for him -- but it is worth seeding
+the demo if the demo is ever shown to anyone.
 
-HIS 11 STAGES vs THE CRM'S 9. His list has "Attempting Contact" separate from
-Contacted, a "Closed" stage, and "Sphere/Past Client". The CRM merges the
-first two, treats under-contract as won, and handles past clients as a SOURCE
-rather than a stage. I would leave it -- his eleven read like a generic CRM
-lifecycle, the nine are side-aware and match how a deal actually moves -- but
-it is his business, so show him rather than deciding for him.
+ALSO IN HERE, from the onboarding audit:
+  speed-to-lead and stage timings   src/lib/velocity.js + a dashboard section
+  lost reasons and motivation       settings, contact record
+  new leads email Alex              api/lead-intake.js
+  See the previous zip's notes for the reasoning on each.
 
 VERIFIED
-  657 checks pass, including 23 new ones covering every edge case above.
-  Build compiles.
+  657 checks pass, including the tab walker confirming Tasks and Activity both
+  render with no NaN and no undefined. Build compiles.

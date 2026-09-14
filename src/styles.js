@@ -1292,6 +1292,48 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .set-row .nav-mv button:hover:not(:disabled){border-color:${COBALT};color:${COBALT}}
 
 /* ---------------------------------------------------------------- tasks --- */
+
+/* --- task screen: the filter bar, focus state and row actions ------------- */
+
+/* --- activity: the counts strip ------------------------------------------ */
+.ac-chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 12px;margin-bottom:4px;
+  border-bottom:1px solid #EDEEF5}
+.ac-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4E5EF;background:#fff;
+  border-radius:20px;padding:5px 11px;font:inherit;font-size:12px;font-weight:650;
+  color:#56527a;cursor:pointer;line-height:1.2}
+.ac-chip:hover{border-color:#C9CBDD}
+.ac-chip.on{background:${COBALT};border-color:${COBALT};color:#fff}
+.ac-chip-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 6px;font-size:11px}
+.ac-chip.on .ac-chip-n{background:rgba(255,255,255,.22);color:#fff}
+.tk-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:10px;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid #EDEEF5}
+.tk-chips{display:flex;flex-wrap:wrap;gap:6px}
+.tk-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4E5EF;background:#fff;
+  border-radius:20px;padding:5px 11px;font:inherit;font-size:12px;font-weight:650;
+  color:#56527a;cursor:pointer;line-height:1.2}
+.tk-chip:hover{border-color:#C9CBDD}
+.tk-chip.on{background:${COBALT};border-color:${COBALT};color:#fff}
+.tk-chip.late{color:#B03030;border-color:#F0D2CC}
+.tk-chip.late.on{background:#B03030;border-color:#B03030;color:#fff}
+.tk-chip-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 6px;font-size:11px}
+.tk-chip.on .tk-chip-n{background:rgba(255,255,255,.22);color:#fff}
+
+/* The focused row reads as picked without shouting: a gold edge, not a fill. */
+.tk-row.foc{border-color:${GOLD};box-shadow:inset 3px 0 0 0 ${GOLD}}
+
+.tk-acts{display:flex;align-items:center;gap:2px;flex:none}
+.tk-act{border:0;background:none;cursor:pointer;color:#B9B6CA;padding:5px;border-radius:7px;
+  display:inline-flex;align-items:center}
+.tk-act:hover:not(:disabled){background:#F2F3F9;color:${COBALT}}
+.tk-act.on{color:${GOLD}}
+.tk-act.del:hover{color:#B03030}
+.tk-act:disabled{opacity:.35;cursor:default}
+
+.tk-score{color:#9B98AD}
+.tk-dials{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;padding-top:8px;
+  border-top:1px dashed #E7E8F1}
+.tk-dial{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6885;font-weight:650}
+.tk-dial select{padding:3px 6px;font-size:12px}
 .tk-add{display:grid;grid-template-columns:1fr 170px auto;gap:9px;align-items:center}
 @media(max-width:640px){.tk-add{grid-template-columns:1fr}}
 .tk-grp{margin-top:14px}
