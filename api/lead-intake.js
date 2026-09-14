@@ -191,6 +191,12 @@ export default async function handler(req, res) {
        first activity entry IS the speed-to-lead number. Nothing computes it
        yet; this is the field that makes computing it possible later without a
        backfill. */
+    /* Blank rather than guessed. A website lead has not said why it is moving,
+       and inventing a motivation from which form they filled in would put a
+       fact in the record that nobody ever told us. Alex fills it on the first
+       call, which is when he finds out. */
+    motivation: '',
+    lostReason: '',
     firstContactAt: null,
     activity: [
       {
@@ -233,9 +239,71 @@ export default async function handler(req, res) {
 
     const [saved] = await r.json();
     console.log('[lead-intake] stored', saved?.id, source, deployment);
+
+    /*
+     * Tell Alex, without making him refresh a tab.
+     *
+     * NOT AWAITED, and that is the point. The website gives this endpoint
+     * eight seconds and never retries, so a slow mail provider must never be
+     * the reason a lead fails to store. The row is already saved by the time
+     * this fires; the email is best effort on top of it.
+     *
+     * This is also the ONLY thing in the CRM that tells him a lead arrived.
+     * Until now the intake stored the contact and stopped, and the email he
+     * actually receives comes from the Apps Script on the website's own sheet
+     * webhook — so if that path ever changed, his notifications would go
+     * silent and the CRM would not have covered for it.
+     */
+    void notifyNewLead({ id: saved?.id, name: fullName, email, phone: data.phone, source, notes, route: data.attribution.landingRoute });
+
     return res.status(200).json({ ok: true, id: saved?.id ?? null });
   } catch (err) {
     console.error('[lead-intake][RECOVERABLE] threw', String(err), JSON.stringify(b));
     return res.status(502).json({ ok: false, error: 'exception' });
+  }
+}
+
+/*
+ * The new-lead email. Resend, the same provider api/notify.js uses.
+ *
+ * Deliberately NOT routed through api/notify.js: that handler requires a
+ * Supabase session (requireAuth: true), which a server-to-server webhook does
+ * not have and should not be given one.
+ *
+ * Unconfigured means SILENT, not broken. RESEND_API_KEY and NOTIFY_FROM are
+ * not set on this project yet, so today this logs once and returns. The lead
+ * still lands in the CRM, the sheet and the Apps Script email either way.
+ */
+async function notifyNewLead(lead) {
+  const KEY = process.env.RESEND_API_KEY;
+  const FROM = process.env.NOTIFY_FROM;
+  const TO = String(process.env.NOTIFY_TO || '').split(',').map(x => x.trim()).filter(x => x.includes('@'));
+  if (!KEY || !FROM || !TO.length) {
+    console.log('[lead-intake] email not configured (RESEND_API_KEY, NOTIFY_FROM, NOTIFY_TO). Lead stored, nobody emailed by the CRM.');
+    return;
+  }
+  const esc = v => String(v ?? '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+  const row = (k, v) => (v ? `<tr><td style="padding:4px 14px 4px 0;color:#5B6478">${k}</td><td style="padding:4px 0"><b>${esc(v)}</b></td></tr>` : '');
+  const link = process.env.APP_URL ? `${process.env.APP_URL}/?contact=${encodeURIComponent(lead.id || '')}` : '';
+  const html = `<div style="font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:15px;color:#111528;line-height:1.55">
+    <p style="margin:0 0 14px"><b>${esc(lead.name)}</b> just came in from the website.</p>
+    <table style="border-collapse:collapse;font-size:14px">
+      ${row('Phone', lead.phone)}${row('Email', lead.email)}
+      ${row('Source', lead.source)}${row('Page', lead.route)}
+    </table>
+    ${lead.notes ? `<p style="margin:14px 0 0;padding:10px 12px;background:#F1F4FE;border-radius:8px">${esc(lead.notes)}</p>` : ''}
+    ${link ? `<p style="margin:18px 0 0"><a href="${link}" style="color:#1338DE">Open the contact in the CRM</a></p>` : ''}
+    <p style="margin:18px 0 0;font-size:12px;color:#5B6478">They are at the top of the pipeline in New Lead. Speed to lead is the metric this is here to serve.</p>
+  </div>`;
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${KEY}` },
+      body: JSON.stringify({ from: FROM, to: TO, subject: `New lead: ${lead.name}`, html }),
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) console.error('[lead-intake] email failed', r.status, await r.text());
+  } catch (e) {
+    console.error('[lead-intake] email threw', String(e));
   }
 }

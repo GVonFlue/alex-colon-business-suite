@@ -927,12 +927,15 @@ function ListsCard({ ctx, open, onToggle }) {
     propertyTypes: arr(s.propertyTypes).length ? arr(s.propertyTypes) : FALLBACK.propertyTypes,
     timelines: arr(s.timelines).length ? arr(s.timelines) : FALLBACK.timelines,
     preapprovalStatuses: arr(s.preapprovalStatuses).length ? arr(s.preapprovalStatuses) : FALLBACK.preapprovalStatuses,
+    motivations: arr(s.motivations).length ? arr(s.motivations) : FALLBACK.motivations,
+    lostReasons: arr(s.lostReasons).length ? arr(s.lostReasons) : FALLBACK.lostReasons,
   });
   const save = () => {
     ctx.saveSettings({
       ...ctx.settings,
       sources: d.sources, propertyTypes: d.propertyTypes,
       timelines: d.timelines, preapprovalStatuses: d.preapprovalStatuses,
+      motivations: d.motivations, lostReasons: d.lostReasons,
     });
     ctl.clean();
   };
@@ -962,6 +965,16 @@ function ListsCard({ ctx, open, onToggle }) {
 
       <Sub>Pre-approval statuses</Sub>
       <ChipEdit items={d.preapprovalStatuses} onChange={v => ctl.patch({ preapprovalStatuses: v })} placeholder="Add a status" />
+
+      <Sub>Motivations — why they are moving</Sub>
+      <ChipEdit items={d.motivations} onChange={v => ctl.patch({ motivations: v })} placeholder="Add a motivation" />
+
+      <Sub>Lost reasons — asked for whenever a lead is marked lost</Sub>
+      <ChipEdit items={d.lostReasons} onChange={v => ctl.patch({ lostReasons: v })} placeholder="Add a reason" />
+      <div style={{ fontSize: 11.5, color: '#8E89A8', marginTop: 8 }}>
+        These are what the funnel report groups by, so keep the list short. A reason that
+        only ever applies to one lead tells you nothing when you look back at fifty.
+      </div>
 
       <SaveBar dirty={ctl.dirty} onSave={save} onReset={ctl.reset} />
     </Sec>

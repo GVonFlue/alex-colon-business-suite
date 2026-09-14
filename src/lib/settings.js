@@ -194,6 +194,12 @@ export const DASH_SECTIONS = [
   { key: 'source',   label: 'Lead source ROI' },
   { key: 'scorecard',label: 'Team scorecard', leaderOnly: true },
   { key: 'followups',label: 'Follow-ups and hot leads' },
+  /* Speed to lead, and where leads fall out. Both asked for by name:
+     "I especially want first-response time tracked because speed-to-lead
+     matters", and "identify where leads are falling out of the funnel".
+     reconcileOrder() inserts a new key at its CANONICAL position rather than
+     appending, so this lands here on existing installs too. */
+  { key: 'velocity', label: 'Speed to lead & lost reasons' },
 ];
 
 /* ----------------------------------------------------------------- modules */
@@ -245,6 +251,27 @@ export function defaultSettings() {
     propertyTypes: ['Single family', 'Condo / townhome', 'Multi-family', 'Land', 'New construction', 'Manufactured', 'Commercial'],
     timelines: ['ASAP', '30 days', '60 days', '90 days', '6 months', '12 months+', 'Just looking'],
     preapprovalStatuses: ['Not started', 'In progress', 'Pre-qualified', 'Pre-approved', 'Cash'],
+
+    /* Why they are moving. Alex asked for motivation on every lead, and it is
+       the field that tells you whether a 90-day timeline is real: somebody
+       relocating for work has a date, somebody who is "just curious" does not.
+       Editable in Settings like every other dropdown. */
+    motivations: [
+      'Relocating for work', 'Outgrown the house', 'Downsizing', 'PCS / military move',
+      'First purchase', 'Investment', 'Divorce or separation', 'Estate or inherited',
+      'Financial change', 'Just curious',
+    ],
+
+    /* Alex's own eight, verbatim from his onboarding, plus Other.
+
+       Required when a lead is moved to Lost — see Contacts.jsx. He asked to
+       "eventually be able to identify where leads are falling out of the
+       funnel", and a lost stage with no reason cannot answer that. Collecting
+       it at the moment of the change is the only time anybody actually knows. */
+    lostReasons: [
+      'Unable to contact', 'Already has an agent', 'Financing', 'Timing',
+      'Price expectations', 'Chose another agent', 'Stopped looking', 'Other',
+    ],
 
     /* counting rules (§4b) */
     dateRules: {

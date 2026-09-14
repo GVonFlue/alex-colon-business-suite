@@ -38,6 +38,10 @@ import {
 } from '../lib/dates';
 import { capProgress, agentPlan, computeCommission } from '../lib/commission';
 import { usd, sum, pct } from '../lib/format';
+import {
+  firstResponseHours, awaitingFirstResponse, medianFirstResponseHours,
+  humanHours, medianDaysToClose, lostReasonBreakdown,
+} from '../lib/velocity';
 import { Card, Kpi, Btn, Empty, SecTitle, Pill, LegalNote, Drill } from '../components/ui';
 import { FLAT_PLAN, closedOn, expectedPrice, onClosedDate, txGross } from '../lib/txn';
 import { alpha } from '../lib/color';
@@ -1197,6 +1201,118 @@ function FollowupsSection({ ctx, m }) {
   );
 }
 
+/* ======================================= speed to lead, and where leads go cold */
+
+/*
+ * Both halves of this card answer questions Alex asked in his own words:
+ * "I especially want first-response time tracked because speed-to-lead
+ * matters", and "identify where leads are falling out of the funnel".
+ *
+ * THE LEFT HALF IS THE WORKING ONE. A median over last quarter is a report; a
+ * list of three leads that have been sitting since Tuesday is something to do
+ * before lunch. The median is there for context, small, beside it.
+ *
+ * Every figure renders as an em dash when it does not exist rather than as
+ * zero. Zero first-response hours means "answered instantly", which is the
+ * opposite of "never answered", and a dashboard that confuses the two is worse
+ * than one that shows nothing.
+ */
+function VelocitySection({ ctx, m }) {
+  const contacts = ctx.contacts || [];
+  const stages = stagesOf(m.settings);
+
+  const waiting = useMemo(() => awaitingFirstResponse(contacts), [contacts]);
+  const median = useMemo(() => medianFirstResponseHours(contacts), [contacts]);
+  const toClose = useMemo(() => medianDaysToClose(ctx.transactions || []), [ctx.transactions]);
+  const lost = useMemo(() => lostReasonBreakdown(contacts, stages), [contacts, stages]);
+
+  const CAP = 5;
+  const [all, setAll] = useState(false);
+  const show = all ? waiting : waiting.slice(0, CAP);
+
+  return (
+    <Card
+      title="Speed to lead & lost reasons"
+      sub="How fast new leads get a real attempt, and why the ones that did not close fell out. A note logged on arrival is not an attempt: only a call, text, email or meeting counts."
+      right={
+        <Pill color={median !== null && median <= 4 ? BRAND.colors.green : BRAND.colors.gold}>
+          {median === null ? 'No answered leads yet' : `${humanHours(median)} typical first response`}
+        </Pill>
+      }
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 18 }}>
+        <div>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8E89A8', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Waiting on a first attempt
+          </div>
+          {!waiting.length && (
+            <div style={{ fontSize: 12.5, color: '#9b98ad', marginTop: 8 }}>
+              Every open lead has had a real attempt. That is the number to keep at zero.
+            </div>
+          )}
+          {show.map(({ contact, waitingHours }) => (
+            <div key={contact.id} style={{
+              display: 'flex', justifyContent: 'space-between', gap: 10,
+              padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 13,
+            }}>
+              <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {contact.name || 'Unnamed'}
+                {contact.source ? <span style={{ color: '#8E89A8' }}> · {contact.source}</span> : null}
+              </span>
+              <span style={{ flex: 'none', fontWeight: 700, color: waitingHours > 24 ? BRAND.colors.red : BRAND.colors.gold }}>
+                {humanHours(waitingHours)}
+              </span>
+            </div>
+          ))}
+          {waiting.length > CAP && (
+            <button type="button" onClick={() => setAll(v => !v)} style={{
+              background: 'none', border: 'none', color: BRAND.colors.cobalt,
+              font: 'inherit', fontSize: 12, cursor: 'pointer', padding: '8px 0',
+            }}>
+              {all ? 'Show fewer' : `Show all ${waiting.length}`}
+            </button>
+          )}
+        </div>
+
+        <div>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#8E89A8', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Why leads were lost
+          </div>
+          {!lost.total && (
+            <div style={{ fontSize: 12.5, color: '#9b98ad', marginTop: 8 }}>
+              Nothing marked lost yet.
+            </div>
+          )}
+          {lost.rows.map(r => (
+            <div key={r.reason} style={{
+              display: 'flex', justifyContent: 'space-between', gap: 10,
+              padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: 13,
+            }}>
+              <span>{r.reason}</span>
+              <span style={{ fontWeight: 700 }}>{r.count}</span>
+            </div>
+          ))}
+          {/* Counted apart from the reasons on purpose. "Other" is a reason
+              somebody chose; blank is a reason nobody recorded, and reporting
+              them together would send Alex looking for a pattern that is not
+              there. */}
+          {lost.unrecorded > 0 && (
+            <div style={{ fontSize: 11.5, color: '#9b98ad', marginTop: 8 }}>
+              {lost.unrecorded} lost without a reason recorded. The reason is asked for on the
+              contact when the stage changes, and it is the only moment anybody still knows it.
+            </div>
+          )}
+          {toClose !== null && (
+            <div style={{ fontSize: 11.5, color: '#8E89A8', marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.06)' }}>
+              Contract to close, typical: <b style={{ color: '#E6E4F0' }}>{toClose} days</b>. Closed deals only.
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 /* ============================================================ layout plumbing */
 
 /** the sections this user can be shown at all — leader-only ones vanish for agents */
@@ -1320,6 +1436,7 @@ export default function Dashboard({ ctx }) {
       case 'txsummary': return <TxSummarySection ctx={ctx} m={m} />;
       case 'funnel': return <FunnelSection m={m} />;
       case 'source': return <SourceSection m={m} />;
+      case 'velocity': return <VelocitySection ctx={ctx} m={m} />;
       case 'scorecard': return ctx.isLeader ? <ScorecardSection m={m} /> : null;
       case 'followups': return <FollowupsSection ctx={ctx} m={m} />;
       default: return null;

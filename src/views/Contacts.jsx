@@ -195,6 +195,7 @@ export default function Contacts({ ctx }) {
       source: (settings.sources || [])[0] || '', owner_id: isLeader ? null : ctx.me.id,
       pool: null, pooled_at: null, created_at: ctx.todayIso, lastTouch: ctx.todayIso,
       priceMin: '', priceMax: '', targetPrice: '', preapproval: (settings.preapprovalStatuses || [])[0] || '',
+      motivation: '', lostReason: '',
       lender: '', timeline: (settings.timelines || [])[0] || '',
       propertyType: (settings.propertyTypes || [])[0] || '', areas: [], address: '',
       beds: '', baths: '', nextAction: 'First call', nextActionDue: ctx.todayIso, notes: '',
@@ -546,6 +547,30 @@ export function ContactModal({ contact, ctx, onClose, isNew }) {
               <Sel value={d.stage} onChange={e => set('stage', e.target.value)}
                 options={stages.map(s => ({ value: s.key, label: stageLabel(s.key, d.side, settings) }))} />
             </Field>
+            {/*
+              THE LOST REASON, ASKED FOR AT THE MOMENT IT IS KNOWN.
+
+              Alex asked to "eventually be able to identify where leads are
+              falling out of the funnel". A lost stage with no reason attached
+              cannot answer that, and asking later never works: nobody
+              remembers in March why a lead went cold in September.
+
+              It appears only when the stage is one the settings mark as lost,
+              rather than on a hardcoded 'lost' key, so a renamed or added lost
+              stage still collects it.
+
+              It is NOT enforced as a blocking validation. A required field on
+              the way out of a record somebody is trying to close is how you
+              teach them to pick the first option in the list, which is worse
+              than a blank: a wrong reason looks like data.
+            */}
+            {stages.find(st => st.key === d.stage)?.lost && (
+              <Field label="Why was it lost?" hint="This is what the funnel report groups by">
+                <Sel options={settings.lostReasons || []} value={d.lostReason || ''} onChange={e => set('lostReason', e.target.value)}>
+                  <option value="">Not recorded</option>
+                </Sel>
+              </Field>
+            )}
             <Field label="Source">
               <Sel options={settings.sources || []} value={d.source || ''} onChange={e => set('source', e.target.value)}>
                 <option value="">Unknown</option>
@@ -583,6 +608,14 @@ export function ContactModal({ contact, ctx, onClose, isNew }) {
                   onChange={e => set('targetPrice', e.target.value === '' ? '' : Number(e.target.value))} placeholder="329000" />
               </Field>
             )}
+            {/* WHY they are moving. Alex asked for motivation on every lead, and
+                it is what tells you whether a timeline is real: somebody with a
+                report date has one, somebody who is curious does not. */}
+            <Field label="Motivation" hint="Why they are moving">
+              <Sel options={settings.motivations || []} value={d.motivation || ''} onChange={e => set('motivation', e.target.value)}>
+                <option value="">Not asked yet</option>
+              </Sel>
+            </Field>
             <Field label="Timeline">
               <Sel options={settings.timelines || []} value={d.timeline || ''} onChange={e => set('timeline', e.target.value)}>
                 <option value="">Not asked yet</option>

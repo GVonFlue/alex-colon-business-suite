@@ -222,6 +222,10 @@ if (!only || only === 'app') {
       const nl = await import('./newlead.test.mjs');
       await nl.default(t);
 
+      header('velocity — speed to lead, and where leads fall out');
+      const vel = await import('./velocity.test.mjs');
+      await vel.default(t);
+
       header('walk — every tab, what is actually on screen');
       const walk = await import('./walk.test.mjs');
       await walk.default(t, { mount, tick, dom });

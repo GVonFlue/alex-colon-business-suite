@@ -1,0 +1,116 @@
+CRM — the four gaps from the onboarding audit.
+
+UPLOAD
+  Drag the THREE FOLDERS -- api, src, tests -- on together. Do not open them.
+  Commit, then redeploy. Nothing to delete.
+  Do not drag this file in.
+
+--------------------------------------------------------------------------
+1. SPEED TO LEAD, AND STAGE TIMINGS   src/lib/velocity.js  (new)
+--------------------------------------------------------------------------
+
+His words: "I especially want first-response time tracked because
+speed-to-lead matters." None of it existed.
+
+Pure functions, no React and no database, so every screen that ever shows a
+timing gets the same answer from the same place. Two screens computing "days
+to close" two different ways is how a CRM starts disagreeing with itself.
+
+NOTHING NEW IS RECORDED. Every contact already carries created_at and an
+activity array with an `at` and a `kind`, so these are derivable for leads
+that already exist. No migration, no backfill.
+
+THE ONE DECISION EVERYTHING RESTS ON: a NOTE is not a response.
+api/lead-intake.js writes a note the instant a website lead lands. If notes
+counted, every website lead would read as answered in zero seconds and the
+metric would be measuring how fast the webhook fired rather than how fast Alex
+called. Only a call, text, email or meeting counts.
+
+MEDIAN, NOT MEAN. One lead that sat over a holiday drags a mean far enough to
+make a good month look bad. Median of 1, 3 and 11 hours is 3; the mean is 5.
+
+NULL IS NOT ZERO. "Answered instantly" and "never answered" are opposite
+facts. Null renders as an em dash, and humanHours(0) returns "1 min" rather
+than "0" so it can never be misread as instant.
+
+--------------------------------------------------------------------------
+2. THE DASHBOARD SECTION   "Speed to lead & lost reasons"
+--------------------------------------------------------------------------
+
+Left half is the working one: leads still waiting on a first attempt, longest
+first, red past 24 hours. A median over last quarter is a report; three leads
+sitting since Tuesday is something to do before lunch. The median sits small
+beside it for context.
+
+Right half is where leads fall out, grouped by the reason recorded at the
+time. Contract-to-close, closed deals only, underneath.
+
+It registers in DASH_SECTIONS, and reconcileOrder() inserts a new key at its
+canonical position rather than appending -- so it appears in the right place
+on an install that already has a saved dashboard order.
+
+--------------------------------------------------------------------------
+3. LOST REASONS, AND MOTIVATION
+--------------------------------------------------------------------------
+
+His eight reasons verbatim, plus Other. The field appears on the contact ONLY
+when the stage is one the settings mark as lost -- not on a hardcoded 'lost'
+key, so a renamed or added lost stage still collects it.
+
+NOT enforced as a blocking validation, deliberately. A required field on the
+way out of a record somebody is trying to close teaches them to pick the first
+option in the list, and a wrong reason looks like data in a way a blank does
+not. Blanks are counted and reported SEPARATELY from "Other" for the same
+reason: "Other" is a reason somebody chose, blank is one nobody recorded.
+
+MOTIVATION was the one field on his list that existed nowhere. Ten options,
+editable in Settings. The intake leaves it blank rather than guessing from
+which form they filled in -- Alex fills it on the first call, which is when he
+finds out.
+
+Both lists are editable in Settings under "Lead sources and picklists".
+
+--------------------------------------------------------------------------
+4. NEW LEADS NOW EMAIL HIM   api/lead-intake.js
+--------------------------------------------------------------------------
+
+THIS IS THE ONE WITH CONSEQUENCES TODAY. The intake stored the contact and
+stopped. The email Alex actually receives comes from the Apps Script on the
+WEBSITE'S sheet webhook -- so if that path ever changed, his notifications
+would go silent and the CRM would not have covered for it.
+
+Not routed through api/notify.js: that handler requires a Supabase session,
+which a server-to-server webhook does not have and should not be given.
+
+Not awaited. The website gives this endpoint eight seconds and never retries,
+so a slow mail provider must never be why a lead fails to store. The row is
+saved before the email fires.
+
+TO TURN IT ON, set three env vars on the CRM project:
+    RESEND_API_KEY      a Resend key
+    NOTIFY_FROM         a verified sender, e.g. leads@getproytech.com
+    NOTIFY_TO           Alex@athomewichita.com
+Unconfigured it logs one line and returns. The lead still lands in the CRM,
+the sheet and the Apps Script email either way, so this is safe to upload
+before the keys exist.
+
+--------------------------------------------------------------------------
+WHAT I DID NOT BUILD
+--------------------------------------------------------------------------
+
+COST PER LEAD / APPOINTMENT / CLOSING, and campaign-level attribution. It
+needs marketing spend tied to sources and a campaign field on the contact, and
+it is the largest of the four. Worth noting the CRM ALREADY has source ROI by
+closed GCI on the dashboard -- what is missing is the cost side, not the whole
+report.
+
+HIS 11 STAGES vs THE CRM'S 9. His list has "Attempting Contact" separate from
+Contacted, a "Closed" stage, and "Sphere/Past Client". The CRM merges the
+first two, treats under-contract as won, and handles past clients as a SOURCE
+rather than a stage. I would leave it -- his eleven read like a generic CRM
+lifecycle, the nine are side-aware and match how a deal actually moves -- but
+it is his business, so show him rather than deciding for him.
+
+VERIFIED
+  657 checks pass, including 23 new ones covering every edge case above.
+  Build compiles.
