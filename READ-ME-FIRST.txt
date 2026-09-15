@@ -1,6 +1,6 @@
-TASKS + ACTIVITY — matched to ProyTech, second pass.
+THE INPUT BOX — and the bug behind it.
 
-Supersedes the previous zip. Upload this one.
+Supersedes every previous CRM zip. Upload this one.
 
 UPLOAD
   Drag the TWO FOLDERS -- api and src -- on together. Do not open them.
@@ -8,55 +8,50 @@ UPLOAD
   Do not drag this file in.
 
 --------------------------------------------------------------------------
-WHAT WAS STILL DIFFERENT, SIDE BY SIDE
+YOU WERE RIGHT, AND IT WAS WORSE THAN THE TASK SCREEN
 --------------------------------------------------------------------------
 
-Comparing the two screenshots, four things, and none of them were the parts I
-had already ported:
+A bare <input> in this CRM got NOTHING from the stylesheet.
 
-1. NO PAGE SUBTITLE. ProyTech has one under every heading -- "AI-ranked to-dos
-   for you & Logan". Alex's had "Tasks" and then a large empty gap.
+Every input rule in styles.js is scoped -- .field input, .gate-card input,
+.cp-add input -- so anything rendered as a plain <Inp /> fell all the way back
+to the browser's default control. No padding, no radius, no border colour, no
+focus ring.
 
-   The .top .sub rule has been sitting in styles.js the whole time with nothing
-   rendering into it. Every screen in the Suite opened with a bare word and a
-   hole under it. Fourteen subtitles added, one per screen, kept in one list
-   next to the nav so it is obvious when a new screen ships without one.
+THAT IS 118 INPUTS ACROSS NINE VIEWS. Books, Contacts, Contracts, Huddle, PCS,
+Settings, Tasks, Tools, Transactions. The task screen is simply where it was
+visible sitting next to a styled product.
 
-2. THE ADD CARD WASTED A THIRD OF A SCREEN. It had "Add a task" plus a line of
-   explanation above a single text field, on the screen somebody opens to see
-   the list. ProyTech's is just the input and the controls in a bare card. The
-   placeholder already says what the field is for.
+ProyTech does not have this problem because it styles that input INLINE, in
+the component, rather than relying on the stylesheet.
 
-3. THE ROWS WERE NOT CARDS. This was the big one. ProyTech renders each task as
-   a .card -- 22px radius, soft shadow. Mine were 12px with a flat border,
-   which reads as a table row. 22px and a shadow reads as an object you can act
-   on, which is what a task is.
+FIXED GLOBALLY, not on the one box. There is now a baseline rule for input,
+select and textarea at ONE specificity (0,0,1), so every existing scoped rule
+still wins and nothing that already looked right changes. Verified: all 14
+tabs still render, no NaN, no undefined, 661 checks pass.
 
-4. THE SCORES WERE BARE GREY TEXT. ProyTech rows carry a coloured owner pill
-   ("Garrett" with a dot) and that one element is most of what gives the row
-   its rhythm. This install has one agent, so an owner pill would invent a
-   distinction that does not exist. The impact/urgency/effort figures get the
-   same pill treatment instead -- same rhythm, no fabricated data.
-
-Also: the filter bar now wraps cleanly under 1180px instead of jamming the AI
-rank button against the segments.
+The add row then runs LARGER than that baseline -- 46px tall, 11px radius,
+14.5px type -- because it is the one control in the product somebody touches
+every single day and it should be the easiest thing on the screen to hit. The
+day chips and the Add button are pinned to the same height, or a 46px field
+beside a 36px button reads as misaligned even when it is centred.
 
 --------------------------------------------------------------------------
-ALSO IN HERE, from the previous pass
+ALSO IN HERE, from the last two passes
 --------------------------------------------------------------------------
 
-  api/rank-tasks.js        AI ranking, prompt rewritten for a real estate
-                           agent rather than ProyTech's $10K sprint
-  Focus / Free time        sections with a soft 6 cap, day-based expiry
-  "picked 3x"              the tell for work that is blocked or badly scoped
-  Activity tiles + chips   Total logged, Calls, Texts, Emails, Appointments
-  db.upsertTasks()         bulk writer, so ranking is one round trip
+  page subtitles on all 14 screens   the .top .sub rule existed with nothing
+                                     rendering into it
+  task rows are .card                22px radius and a shadow, like ProyTech
+  the add card lost its heading      it was eating a third of the screen
+  scores as a pill                   ProyTech's rhythm without inventing an
+                                     owner this install does not have
+  api/rank-tasks.js                  AI ranking, prompt written for a real
+                                     estate agent
+  Focus / Free time, "picked 3x"     ported whole
+  Activity tiles and filter chips
+  db.upsertTasks()                   bulk writer for ranking
 
 VERIFIED
-  661 checks pass. Build compiles.
-
-WORTH SAYING
-  Your two test tasks are the reason the screen still looks emptier than
-  ProyTech's: that one has 40 tasks with due dates, overdue badges and AI
-  ranks. The layout is the same now; the density is not, and that closes on
-  its own once real contracts and leads are in it.
+  661 checks pass, including the tab walker across all 14 screens.
+  Build compiles.

@@ -1430,6 +1430,35 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .tk-list{display:flex;flex-direction:column;gap:11px}
 .tk-addcard{margin-bottom:16px;padding:16px 18px}
 
+/* THE INPUT BASELINE, AND WHY IT IS GLOBAL.
+
+   A bare <input> with no class got NOTHING from this stylesheet. Every input
+   rule in it is scoped — .field input, .gate-card input, .cp-add input — so
+   anything rendered as a plain <Inp /> fell back to the browser default
+   control.
+
+   That is 118 inputs across nine views, not one box on the task screen. The
+   task screen is just where it was visible next to a styled product.
+
+   This is the baseline, at ONE specificity (0,0,1), so every existing scoped
+   rule still wins and nothing that already looked right changes. */
+input:not([type=checkbox]):not([type=radio]):not([type=color]),
+select,
+textarea{
+  padding:10px 12px;border:1px solid #E2E3EE;border-radius:10px;font-size:14px;
+  font-family:'Inter';background:#fff;color:${INK};line-height:1.4}
+input:not([type=checkbox]):not([type=radio]):not([type=color]):focus,
+select:focus,
+textarea:focus{outline:none;border-color:${COBALT};box-shadow:0 0 0 3px ${alpha(COBALT,.13)}}
+input::placeholder,textarea::placeholder{color:#9B98AD}
+
+/* The add row runs larger than the baseline. It is the one control in the
+   product somebody uses every single day, and it should be the easiest thing
+   on the screen to hit. ProyTech's is sized this way for the same reason. */
+.tk-add2 input:not([type=date]){padding:12px 14px;border-radius:11px;font-size:14.5px;min-height:46px}
+.tk-add2 .day-chip,.tk-add2 .day-date{min-height:46px;display:inline-flex;align-items:center}
+.tk-add2 .btn{min-height:46px}
+
 /* The row IS a card, matching ProyTech. 12px radius and no shadow read as a
    table row; 22px and a soft shadow read as an object you can act on, which is
    what a task is. This was the single biggest visual difference between the
