@@ -226,6 +226,10 @@ if (!only || only === 'app') {
       const vel = await import('./velocity.test.mjs');
       await vel.default(t);
 
+      header('contacts — opening every record');
+      const co = await import('./contactopen.test.mjs');
+      await co.default(t, { mount, tick, dom });
+
       header('walk — every tab, what is actually on screen');
       const walk = await import('./walk.test.mjs');
       await walk.default(t, { mount, tick, dom });

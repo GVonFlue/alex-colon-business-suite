@@ -1,57 +1,69 @@
-THE INPUT BOX — and the bug behind it.
-
-Supersedes every previous CRM zip. Upload this one.
+THE BLANK WHITE PAGE — found, and it was my fault.
 
 UPLOAD
-  Drag the TWO FOLDERS -- api and src -- on together. Do not open them.
+  Drag the TWO FOLDERS -- src and tests -- on together. Do not open them.
   Commit, then redeploy.
   Do not drag this file in.
 
 --------------------------------------------------------------------------
-YOU WERE RIGHT, AND IT WAS WORSE THAN THE TASK SCREEN
+THE BLANK CONTACTS
 --------------------------------------------------------------------------
 
-A bare <input> in this CRM got NOTHING from the stylesheet.
+src/views/Contacts.jsx rendered the areas-of-interest chips like this:
 
-Every input rule in styles.js is scoped -- .field input, .gate-card input,
-.cp-add input -- so anything rendered as a plain <Inp /> fell all the way back
-to the browser's default control. No padding, no radius, no border colour, no
-focus ring.
+    {(d.areas || []).map(a => ...)}
 
-THAT IS 118 INPUTS ACROSS NINE VIEWS. Books, Contacts, Contracts, Huddle, PCS,
-Settings, Tasks, Tools, Transactions. The task screen is simply where it was
-visible sitting next to a styled product.
+That guards null and nothing else. A contact whose `areas` arrived as a
+STRING hits .map on a string, throws, and React unmounts the entire tree.
+White page.
 
-ProyTech does not have this problem because it styles that input INLINE, in
-the component, rather than relying on the stylesheet.
+WHERE THE STRINGS CAME FROM: the demo-data SQL I gave you for the Cowork
+screenshots. Seven of those rows carry
 
-FIXED GLOBALLY, not on the one box. There is now a baseline rule for input,
-select and textarea at ONE specificity (0,0,1), so every existing scoped rule
-still wins and nothing that already looked right changes. Verified: all 14
-tabs still render, no NaN, no undefined, 661 checks pass.
+    'areas', 'Maize, Goddard'
 
-The add row then runs LARGER than that baseline -- 46px tall, 11px radius,
-14.5px type -- because it is the one control in the product somebody touches
-every single day and it should be the easiest thing on the screen to hit. The
-day chips and the Add button are pinned to the same height, or a 46px field
-beside a 36px button reads as misaligned even when it is centred.
+as a string, because that is how I wrote it. The UI stores an array. That is
+why SOME contacts opened and some did not — only the seeded ones with areas
+are broken, and they are broken because of my file.
+
+Fixed in src/lib/areas.js, a normaliser that takes an array, a comma string, a
+single value, null or undefined and always returns an array. Applied on the
+READ path and the WRITE path both: spreading a string would have exploded
+"Maize" into five separate chips.
+
+It lives in lib rather than in the component because it is data normalisation
+rather than UI, and because a .jsx file cannot be imported by the test runner —
+which is the other half of why this was never caught.
+
+WHY 661 CHECKS PASSED WHILE THIS WAS BROKEN: the tab walker clicks TABS. This
+only happens when a RECORD opens. tests/contactopen.test.mjs now opens 25
+contact records and asserts none of them render blank, plus eight shape cases
+on the normaliser itself.
+
+671 checks pass.
 
 --------------------------------------------------------------------------
-ALSO IN HERE, from the last two passes
+THE TASKS NOT REACHING ACTIVITY
 --------------------------------------------------------------------------
 
-  page subtitles on all 14 screens   the .top .sub rule existed with nothing
-                                     rendering into it
-  task rows are .card                22px radius and a shadow, like ProyTech
-  the add card lost its heading      it was eating a third of the screen
-  scores as a pill                   ProyTech's rhythm without inventing an
-                                     owner this install does not have
-  api/rank-tasks.js                  AI ranking, prompt written for a real
-                                     estate agent
-  Focus / Free time, "picked 3x"     ported whole
-  Activity tiles and filter chips
-  db.upsertTasks()                   bulk writer for ranking
+activity.js is in here again, unchanged from what you already applied. I
+verified against the exact shape the UI writes when you tick a task:
 
-VERIFIED
-  661 checks pass, including the tab walker across all 14 screens.
-  Build compiles.
+    ticked today, default view : appears
+    no due date, ticked today  : appears
+
+So the fix itself is correct and live. If a task you tick STILL does not show,
+it is one of these, in order of likelihood:
+
+1. THE DATE WINDOW. Activity defaults to a range ending today. A task whose
+   only date is an OLD due date lands on that old date, not today — that is
+   the fallback working as intended. Widen the range to 30 days and look again.
+
+2. THE SEEDED TASKS. Every task the demo SQL marked done has no doneAt, so it
+   falls back to its due date, which is in the past. Same as above.
+
+3. A hard refresh. Cmd+Shift+R.
+
+Tick a BRAND NEW task and it should appear immediately under today. If that
+one does not show, tell me and I will keep digging — but that case is now
+covered by a test, so I would want to see it.

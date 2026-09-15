@@ -31,6 +31,7 @@ import { addDays, daysUntil, fmtShort, fmtLong } from '../lib/dates';
 import { usd, uid, phoneFmt } from '../lib/format';
 import { expectedPrice } from '../lib/txn';
 import { BRAND } from '../lib/brand';
+import { areaList } from '../lib/areas';
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -88,6 +89,7 @@ export function visiblePools(ctx) {
 }
 
 /* ============================================================== the view */
+
 
 export default function Contacts({ ctx }) {
   const { settings, contacts, transactions, isLeader, tz } = ctx;
@@ -466,7 +468,11 @@ export function ContactModal({ contact, ctx, onClose, isNew }) {
   const addArea = () => {
     const v = areaDraft.trim();
     if (!v) return;
-    if (!(d.areas || []).includes(v)) set('areas', [...(d.areas || []), v]);
+    /* areaList here too. Spreading a STRING explodes it into single
+       characters — "Maize" would become five separate area chips — so the
+       normalise has to happen on the write path as well as the read. */
+    const cur = areaList(d.areas);
+    if (!cur.includes(v)) set('areas', [...cur, v]);
     setAreaDraft('');
   };
 
@@ -653,8 +659,23 @@ export function ContactModal({ contact, ctx, onClose, isNew }) {
             </Field>
             <Field label="Areas of interest" full hint="Type an area and press Enter">
               <div className="chips">
-                {(d.areas || []).map(a => (
-                  <button key={a} className="chip on" onClick={() => set('areas', (d.areas || []).filter(x => x !== a))}>
+                {/*
+                  areaList(), not d.areas directly.
+
+                  This was `(d.areas || []).map(...)`, which guards null and
+                  nothing else. A contact whose areas arrived as a STRING —
+                  "Maize, Goddard" — hits .map on a string, throws, and React
+                  unmounts the whole tree. That is the blank white page, and it
+                  only happened on SOME contacts because only some carry the
+                  field.
+
+                  Imports, SQL seeds and any future integration all write
+                  whatever they were given. A drawer that renders somebody's
+                  entire record should not be one wrong type away from showing
+                  nothing at all.
+                */}
+                {areaList(d.areas).map(a => (
+                  <button key={a} className="chip on" onClick={() => set('areas', areaList(d.areas).filter(x => x !== a))}>
                     <MapPin size={11} /> {a} <X size={11} />
                   </button>
                 ))}
