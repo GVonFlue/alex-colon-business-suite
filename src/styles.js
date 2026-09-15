@@ -136,6 +136,7 @@ export const CSS = `
 .kpi.accent{background:linear-gradient(135deg,${COBALT},#2540c0);border:none}.kpi.accent .kl,.kpi.accent .kd{color:#D5DCFB}.kpi.accent .kv{color:#fff}
 .kpi.gold{background:linear-gradient(135deg,${GOLD},#B0862F);border:none}.kpi.gold .kl,.kpi.gold .kd{color:#fff5e0}.kpi.gold .kv{color:#fff}
 .kpi.green{background:linear-gradient(135deg,${GREEN},#178047);border:none}.kpi.green .kl,.kpi.green .kd{color:#dafce8}.kpi.green .kv{color:#fff}
+.kpi.red{background:linear-gradient(135deg,${RED},#A82D2D);border:none}.kpi.red .kl,.kpi.red .kd{color:#ffe2e0}.kpi.red .kv{color:#fff}
 .row{display:grid;gap:18px;margin-bottom:18px}.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:2fr 1fr}
 @media(max-width:900px){.r2,.r3{grid-template-columns:1fr}}
 .card{background:#fff;border:1px solid #E8E9F2;border-radius:22px;padding:20px;box-shadow:0 12px 30px -28px rgba(24,21,48,.5)}
@@ -1292,75 +1293,59 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .set-row .nav-mv button:hover:not(:disabled){border-color:${COBALT};color:${COBALT}}
 
 /* ---------------------------------------------------------------- tasks --- */
+.tk-add{display:grid;grid-template-columns:1fr auto 170px auto;gap:9px;align-items:center}
+.tk-quick{display:flex;gap:6px}
+.tk-q{display:inline-flex;align-items:center;gap:5px;border:1px solid #E4E5EF;background:#fff;
+  color:#6B6885;border-radius:10px;padding:8px 11px;font-size:12.5px;font-weight:650;cursor:pointer;
+  font-family:inherit;transition:.14s;white-space:nowrap}
+.tk-q:hover{border-color:${COBALT};color:${COBALT}}
+.tk-q.on{background:${alpha(COBALT,.09)};border-color:${COBALT};color:${COBALT}}
 
-/* --- task screen: the filter bar, focus state and row actions ------------- */
+.tk-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.tk-tiles{grid-template-columns:repeat(2,1fr)}
+  .tk-add{grid-template-columns:1fr;gap:8px}}
 
-/* --- activity: the counts strip ------------------------------------------ */
-.ac-chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 12px;margin-bottom:4px;
-  border-bottom:1px solid #EDEEF5}
-.ac-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4E5EF;background:#fff;
-  border-radius:20px;padding:5px 11px;font:inherit;font-size:12px;font-weight:650;
-  color:#56527a;cursor:pointer;line-height:1.2}
-.ac-chip:hover{border-color:#C9CBDD}
-.ac-chip.on{background:${COBALT};border-color:${COBALT};color:#fff}
-.ac-chip-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 6px;font-size:11px}
-.ac-chip.on .ac-chip-n{background:rgba(255,255,255,.22);color:#fff}
-.tk-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
-  gap:10px;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid #EDEEF5}
-.tk-chips{display:flex;flex-wrap:wrap;gap:6px}
-.tk-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4E5EF;background:#fff;
-  border-radius:20px;padding:5px 11px;font:inherit;font-size:12px;font-weight:650;
-  color:#56527a;cursor:pointer;line-height:1.2}
-.tk-chip:hover{border-color:#C9CBDD}
-.tk-chip.on{background:${COBALT};border-color:${COBALT};color:#fff}
-.tk-chip.late{color:#B03030;border-color:#F0D2CC}
-.tk-chip.late.on{background:#B03030;border-color:#B03030;color:#fff}
-.tk-chip-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 6px;font-size:11px}
-.tk-chip.on .tk-chip-n{background:rgba(255,255,255,.22);color:#fff}
-
-/* The focused row reads as picked without shouting: a gold edge, not a fill. */
-.tk-row.foc{border-color:${GOLD};box-shadow:inset 3px 0 0 0 ${GOLD}}
-
-.tk-acts{display:flex;align-items:center;gap:2px;flex:none}
-.tk-act{border:0;background:none;cursor:pointer;color:#B9B6CA;padding:5px;border-radius:7px;
-  display:inline-flex;align-items:center}
-.tk-act:hover:not(:disabled){background:#F2F3F9;color:${COBALT}}
-.tk-act.on{color:${GOLD}}
-.tk-act.del:hover{color:#B03030}
-.tk-act:disabled{opacity:.35;cursor:default}
-
-.tk-score{color:#9B98AD}
-.tk-dials{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;padding-top:8px;
-  border-top:1px dashed #E7E8F1}
-.tk-dial{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6885;font-weight:650}
-.tk-dial select{padding:3px 6px;font-size:12px}
-.tk-add{display:grid;grid-template-columns:1fr 170px auto;gap:9px;align-items:center}
-@media(max-width:640px){.tk-add{grid-template-columns:1fr}}
-.tk-grp{margin-top:14px}
-.tk-grp:first-child{margin-top:2px}
+.tk-grp{margin-top:18px}
+.tk-grp:first-child{margin-top:4px}
 .tk-grp-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;
-  letter-spacing:.06em;text-transform:uppercase;color:#8E89A8;margin-bottom:7px}
+  letter-spacing:.09em;text-transform:uppercase;color:#8E89A8;margin-bottom:9px}
 .tk-grp-h.late{color:#B03030}
 .tk-grp-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 7px;font-size:11px}
 .tk-grp-h.late .tk-grp-n{background:#F7DED9;color:#8E2B22}
-.tk-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:10px;
-  border:1px solid #EEEFF6;background:#fff;margin-bottom:6px}
-.tk-row:hover{border-color:#D8D9E6}
+
+/* one card per task, the way the Pipeline and Transactions cards read */
+.tk-card{display:flex;align-items:flex-start;gap:11px;background:#fff;
+  border:1px solid #E8E9F2;border-radius:14px;padding:13px 14px;margin-bottom:9px;
+  box-shadow:0 10px 26px -24px rgba(24,21,48,.55);transition:.14s}
+.tk-card:hover{border-color:#D3D5E6;box-shadow:0 12px 28px -20px rgba(24,21,48,.4);
+  transform:translateY(-1px)}
+.tk-card.late{border-left:3px solid ${RED}}
+.tk-card.done{opacity:.62;box-shadow:none}
+.tk-card.done:hover{transform:none}
+
 .tk-check{border:0;background:none;cursor:pointer;color:#C9C5D9;padding:0;margin-top:1px;flex:none}
 .tk-check:hover{color:${COBALT}}
+.tk-card.done .tk-check{color:${GREEN}}
 .tk-mid{flex:1;min-width:0}
-.tk-title{font-size:13.5px;font-weight:600;color:${INK};line-height:1.35}
+.tk-title{font-size:14px;font-weight:650;color:${INK};line-height:1.35}
 .tk-title.done{text-decoration:line-through;color:#9B98AD;font-weight:500}
-.tk-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;font-size:11.5px}
-.tk-due{font-weight:650;color:#6B6885}
-.tk-due.late{color:#B03030}
-.tk-due.none{color:#A6A2BC;font-style:italic}
-.tk-origin{display:inline-flex;align-items:center;gap:4px;border:1px solid #E4E5EF;background:#F7F8FC;
-  color:#56527a;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
-.tk-origin:hover{border-color:${COBALT};color:${COBALT}}
-.tk-note{color:#8E89A8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px}
-.tk-del{border:0;background:none;color:#C9C5D9;cursor:pointer;padding:2px;flex:none}
-.tk-del:hover{color:#B03030}
+.tk-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:7px;font-size:11.5px}
+
+/* every piece of metadata is a chip, so the row scans instead of reading */
+.tk-chip{display:inline-flex;align-items:center;gap:5px;border-radius:20px;
+  padding:3px 9px;font-size:11.5px;font-weight:650;line-height:1.5;white-space:nowrap;
+  border:1px solid transparent;font-family:inherit}
+.tk-due.late{background:${alpha(RED,.11)};color:#A8332A}
+.tk-due.today{background:${alpha(GOLD,.18)};color:#8A6516}
+.tk-due.soon{background:${alpha(COBALT,.10)};color:${COBALT}}
+.tk-due.far{background:#EEF0F7;color:#6B6885}
+.tk-due.none{background:#F4F4F8;color:#A6A2BC;font-style:italic;font-weight:600}
+.tk-from{background:${alpha(INDIGO,.10)};color:${INDIGO}}
+.tk-origin{background:#F7F8FC;border-color:#E4E5EF;color:#56527a;cursor:pointer;transition:.14s}
+.tk-origin:hover{border-color:${COBALT};color:${COBALT};background:${alpha(COBALT,.06)}}
+.tk-note{color:#8E89A8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
+.tk-del{border:0;background:none;color:#B9B5C9;cursor:pointer;padding:3px;flex:none;border-radius:8px}
+.tk-del:hover{color:${RED};background:${alpha(RED,.08)}}
 
 /* ------------------------------------------------------------- activity --- */
 .ac-range{font-size:11.5px;color:#8E89A8;margin-bottom:10px}
