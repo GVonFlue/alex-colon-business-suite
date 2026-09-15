@@ -1404,7 +1404,8 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .day-date input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 
 .tk-bar2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.tk-bar2-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tk-bar2-r{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+@media (max-width:1180px){.tk-bar2-r{margin-left:0;width:100%;justify-content:flex-end}}
 .seg-n{margin-left:6px;font-size:10.5px;font-weight:800;opacity:.62}
 .seg-b.on .seg-n{opacity:.9}
 
@@ -1426,16 +1427,22 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .tk-cap.plain{color:#8b88a0;font-weight:600}
 .tk-cap-note{font-size:12.5px;color:#9A5B18;font-weight:500}
 
-.tk-list{display:flex;flex-direction:column;gap:9px}
-.tkr{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E7E8F1;
-  border-radius:12px;padding:13px 15px}
+.tk-list{display:flex;flex-direction:column;gap:11px}
+.tk-addcard{margin-bottom:16px;padding:16px 18px}
+
+/* The row IS a card, matching ProyTech. 12px radius and no shadow read as a
+   table row; 22px and a soft shadow read as an object you can act on, which is
+   what a task is. This was the single biggest visual difference between the
+   two screens. */
+.tkr{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E8E9F2;
+  border-radius:22px;padding:15px 18px;box-shadow:0 12px 30px -28px rgba(24,21,48,.5)}
 .tkr:hover{border-color:#D8D9E6}
 .tkr-check{background:none;border:0;cursor:pointer;padding:0;margin-top:1px;flex:none}
 .tkr-mid{flex:1;min-width:0}
 .tkr-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tkr-rank{background:${INK};color:#fff;font-weight:700;font-size:11px;border-radius:20px;
   padding:2px 8px;font-variant-numeric:tabular-nums}
-.tkr-title{font-weight:600;color:${INK};font-size:15px;line-height:1.35}
+.tkr-title{font-weight:600;color:${INK};font-size:15.5px;line-height:1.35}
 .tkr-title.done{text-decoration:line-through;color:#9B98AD;font-weight:500}
 .tkr-why{font-size:12.5px;color:${COBALT};margin-top:4px;display:flex;align-items:center;gap:5px}
 .tkr-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;align-items:center;font-size:11.5px}
@@ -1444,7 +1451,15 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .tkr-due input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .tkr-picked{font-size:11px;font-weight:600;color:#9A5B18;background:${alpha(GOLD,.14)};
   border-radius:20px;padding:3px 9px;cursor:help}
-.tkr-dials{font-size:11px;color:#a6a2bc}
+/* A pill, not bare grey text.
+
+   ProyTech's rows carry a coloured owner pill (a dot plus "Garrett") and that
+   single element is most of what gives the row its rhythm. This install has one
+   agent, so an owner pill would be inventing a distinction that does not exist.
+   Giving the scores the same pill treatment restores the rhythm without
+   fabricating data. */
+.tkr-dials{font-size:11px;color:#6a6788;background:#F0F1F7;border-radius:20px;padding:3px 9px;
+  font-weight:600;font-variant-numeric:tabular-nums}
 .tkr-acts{display:flex;gap:4px;flex:none}
 .tkr-act{width:30px;height:30px;border:1px solid #E7E8F1;background:#fff;border-radius:8px;
   cursor:pointer;color:#B9B6CA;display:inline-flex;align-items:center;justify-content:center}

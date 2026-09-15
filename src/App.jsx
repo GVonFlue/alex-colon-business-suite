@@ -63,6 +63,30 @@ const roleLabelOf = u => {
   return r.label || 'Agent';
 };
 
+/*
+ * One line per screen, saying what it is for.
+ *
+ * Kept next to the nav rather than inside each view: a view should not have to
+ * know how the page header is laid out, and having them in one list makes it
+ * obvious when a new screen ships without one.
+ */
+const PAGE_SUB = {
+  dash: 'The whole board at a glance',
+  assistant: 'Ask the CRM anything',
+  tasks: 'AI-ranked to-dos, contract deadlines included',
+  activity: 'Who did what \u2014 calls, texts, meetings and notes',
+  pipeline: 'Drag a card to move a deal',
+  contacts: 'Every client, every conversation',
+  transactions: 'Everything under contract, and what it is waiting on',
+  contracts: 'Critical dates read straight off the contract',
+  commission: 'Closed, pending and what is projected',
+  books: 'Money in, money out, mileage and receipts',
+  tools: 'Drafting and analysis, grounded in your own data',
+  pcs: 'Military moves and relocation timelines',
+  huddle: 'The last 7 days, read and interpreted',
+  settings: 'Customize the Suite \u00b7 back up your data',
+};
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [booted, setBooted] = useState(false);
@@ -492,7 +516,16 @@ export default function App() {
             <div className="top">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <button className="hamb" onClick={() => setNavOpen(o => !o)}><Menu size={22} /></button>
-                <h1>{current ? (current.key === 'assistant' ? AI_NAME : current.label) : 'Dashboard'}</h1>
+                {/* Title AND subtitle, the way ProyTech's header works. The
+                    .top .sub rule has been in styles.js the whole time with
+                    nothing rendering into it, so every screen opened with a
+                    bare word and a gap under it. A one-line answer to "what is
+                    this screen for" is most of why that product reads as
+                    finished and this one did not. */}
+                <div style={{ minWidth: 0 }}>
+                  <h1>{current ? (current.key === 'assistant' ? AI_NAME : current.label) : 'Dashboard'}</h1>
+                  {current && PAGE_SUB[current.key] && <div className="sub">{PAGE_SUB[current.key]}</div>}
+                </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {loading && <Loader2 size={16} className="spin" style={{ color: '#928DAD' }} />}

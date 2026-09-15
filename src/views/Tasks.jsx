@@ -322,7 +322,12 @@ export default function Tasks({ ctx }) {
 
   return (
     <>
-      <Card title="Add a task" sub="Deadlines from a contract arrive here on their own — this is for everything else.">
+      {/* A bare card, no heading. ProyTech's add row is just the input and the
+          controls, and the reason is vertical space: a title and a subtitle
+          above a single text field pushes the actual task list a third of a
+          screen down, on the screen somebody opens to see the list. What the
+          field is for is already obvious from its placeholder. */}
+      <div className="card tk-addcard">
         <div className="tk-add2">
           <Inp
             placeholder="Add a task and hit Enter…"
@@ -340,7 +345,7 @@ export default function Tasks({ ctx }) {
           </div>
           <Btn kind="p" icon={<Plus size={16} />} onClick={add} disabled={!title.trim()}>Add</Btn>
         </div>
-      </Card>
+      </div>
 
       <div className="tk-bar2">
         {canSeeAll && (

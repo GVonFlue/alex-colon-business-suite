@@ -1,119 +1,62 @@
-TASKS + ACTIVITY — matched to ProyTech's CRM, and the reason last time did
-nothing.
+TASKS + ACTIVITY — matched to ProyTech, second pass.
+
+Supersedes the previous zip. Upload this one.
 
 UPLOAD
   Drag the TWO FOLDERS -- api and src -- on together. Do not open them.
-  Commit, then redeploy. Nothing to delete.
+  Commit, then redeploy.
   Do not drag this file in.
 
 --------------------------------------------------------------------------
-WHY NOTHING CHANGED LAST TIME
+WHAT WAS STILL DIFFERENT, SIDE BY SIDE
 --------------------------------------------------------------------------
 
-src/styles.js in the repo had ZERO of the task CSS in it. There is a commit
-called "Update styles.js" that replaced the file, so every class the new markup
-used -- .tkr, .tk-sec, .tk-cap, .ac-chips, all of it -- had no rule behind it.
+Comparing the two screenshots, four things, and none of them were the parts I
+had already ported:
 
-The components shipped. The stylesheet did not. Unstyled markup renders as a
-plain stack of divs, which is exactly what you saw, and nothing errors, so
-there was nothing to catch it.
+1. NO PAGE SUBTITLE. ProyTech has one under every heading -- "AI-ranked to-dos
+   for you & Logan". Alex's had "Tasks" and then a large empty gap.
 
-All of it is appended at the END of the CSS template now rather than inserted
-at an anchor, so a future full-file replacement of styles.js cannot silently
-drop it again without the loss being obvious.
+   The .top .sub rule has been sitting in styles.js the whole time with nothing
+   rendering into it. Every screen in the Suite opened with a bare word and a
+   hole under it. Fourteen subtitles added, one per screen, kept in one list
+   next to the nav so it is obvious when a new screen ships without one.
 
---------------------------------------------------------------------------
-WHAT NOW MATCHES PROYTECH
---------------------------------------------------------------------------
+2. THE ADD CARD WASTED A THIRD OF A SCREEN. It had "Add a task" plus a line of
+   explanation above a single text field, on the screen somebody opens to see
+   the list. ProyTech's is just the input and the controls in a bare card. The
+   placeholder already says what the field is for.
 
-  Today / Tomorrow / date quick-pick on the add row
-  Three filter segments -- Mine/Everyone, Open/Done/All, and
-    Due today / Upcoming / No date / All, each with a live count
-  AI RANK, with Clear ranking, the #1 #2 #3 badges and the one-line reason
-    under each title
-  FOCUS and FREE TIME as sections with a soft 6 cap
-  the "picked 3x" badge
-  tap-the-date-chip to reschedule without opening anything
-  the overdue banner and the no-date hint under the filter row
+3. THE ROWS WERE NOT CARDS. This was the big one. ProyTech renders each task as
+   a .card -- 22px radius, soft shadow. Mine were 12px with a flat border,
+   which reads as a table row. 22px and a shadow reads as an object you can act
+   on, which is what a task is.
 
-FOCUS IS PORTED WHOLE because the mechanism is better than a boolean: it
-stores the DAY it was set, so it expires on its own with no nightly job and is
-still correct if nobody opens the CRM for three days. Rolls at 4am so working
-late does not clear the list mid-evening. Picking counts once per day however
-many times it is toggled -- which is what makes "picked 3x" mean anything.
+4. THE SCORES WERE BARE GREY TEXT. ProyTech rows carry a coloured owner pill
+   ("Garrett" with a dot) and that one element is most of what gives the row
+   its rhythm. This install has one agent, so an owner pill would invent a
+   distinction that does not exist. The impact/urgency/effort figures get the
+   same pill treatment instead -- same rhythm, no fabricated data.
 
-THE SOFT CAP warns at six and never blocks. A cap that refuses you at 4pm when
-something urgent lands is how a tool gets abandoned.
-
-"picked 3x" is the most useful thing on the screen. A task pulled into Focus on
-three separate days and still open is blocked or badly scoped, and nothing else
-in the product surfaces that.
+Also: the filter bar now wraps cleanly under 1180px instead of jamming the AI
+rank button against the segments.
 
 --------------------------------------------------------------------------
-AI RANKING — NEW ENDPOINT, DIFFERENT PROMPT
+ALSO IN HERE, from the previous pass
 --------------------------------------------------------------------------
 
-api/rank-tasks.js is new. The endpoint is ported; the PROMPT is rewritten.
-
-ProyTech's ranks against "collect $10,000 in cash within 3 weeks", which is
-ProyTech's own sprint goal and means nothing to a real estate agent. Copying it
-verbatim would have produced confident rankings against somebody else's
-business objective, which is worse than no ranking at all.
-
-Alex's ranks against keeping deals alive and leads warm, in this order:
-  1. contract deadlines -- off a real clause, usually not recoverable
-  2. speed to lead -- an uncontacted lead decays in hours, not days
-  3. keeping a live deal moving
-  4. work that wins the next deal
-  5. everything else by impact x urgency, lower effort breaking ties
-
-It is behind guard() with requireAuth, per-IP limits and `spends: true`, so it
-sits inside the SAME daily dollar ceiling as jarvis, ai, extract-contract and
-parse-receipt rather than opening a fifth budget.
-
-Hallucinated or duplicate ids are filtered against what was sent, so the worst
-case is a partial ranking the screen handles, not a wrong one.
-
-A missing API key returns ok:false and the screen says so plainly and keeps
-sorting by impact x urgency. Unconfigured is a setup state, not an error.
-
---------------------------------------------------------------------------
-THE ONE DELIBERATE DIFFERENCE
---------------------------------------------------------------------------
-
-ProyTech scores every task on three dials by hand. Half the tasks here are not
-typed by anybody -- Contracts.jsx writes one per contract deadline, off a real
-clause, with a real date. The date already IS the urgency.
-
-So the dials are editable on MANUAL tasks and hidden on deadline ones, and the
-ranking prompt is told a contract deadline outranks a judgement call. Asking
-somebody to rate a task the contract already rated is work for its own sake.
-
---------------------------------------------------------------------------
-ACTIVITY
---------------------------------------------------------------------------
-
-The ProyTech tile row -- Total logged, Calls, Texts, Emails, Appointments,
-Notes -- plus per-kind filter chips. Counts are computed AFTER the date and
-person filters and BEFORE the kind filter, so clicking Calls does not zero
-every other number and leave nothing to click back to. A kind with nothing in
-it is not rendered; an empty chip is a dead control.
-
---------------------------------------------------------------------------
-ALSO IN HERE
---------------------------------------------------------------------------
-
-db.upsertTasks() -- a bulk writer. Ranking rewrites every open task at once,
-which is forty round trips one at a time, and forty chances to end up
-half-ranked. Same row shape as upsertTask, deliberately: two writers building
-the row two different ways is how a column quietly stops being written on one
-path.
+  api/rank-tasks.js        AI ranking, prompt rewritten for a real estate
+                           agent rather than ProyTech's $10K sprint
+  Focus / Free time        sections with a soft 6 cap, day-based expiry
+  "picked 3x"              the tell for work that is blocked or badly scoped
+  Activity tiles + chips   Total logged, Calls, Texts, Emails, Appointments
+  db.upsertTasks()         bulk writer, so ranking is one round trip
 
 VERIFIED
-  661 checks pass, including the tab walker confirming Tasks and Activity both
-  render with no NaN and no undefined. Build compiles.
+  661 checks pass. Build compiles.
 
-AFTER DEPLOYING
-  Tasks and Activity look bare on an install with no data. Add one task, then
-  hit the target icon on it to see Focus. AI rank needs ANTHROPIC_API_KEY,
-  which is already set on this project.
+WORTH SAYING
+  Your two test tasks are the reason the screen still looks emptier than
+  ProyTech's: that one has 40 tasks with due dates, overdue badges and AI
+  ranks. The layout is the same now; the density is not, and that closes on
+  its own once real contracts and leads are in it.
