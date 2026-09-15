@@ -84,13 +84,36 @@ export function buildStream(opts = {}) {
   /* A finished task is an accomplishment and belongs in both views — it is the
      one thing in "what I got done" that is not stored on a contact. */
   for (const t of arr(tasks)) {
-    if (!t || !t.done || !t.doneAt) continue;
+    if (!t || !t.done) continue;
+
+    /*
+     * A FINISHED TASK WITH NO doneAt STILL COUNTS.
+     *
+     * This used to be `if (!t.done || !t.doneAt) continue`, which silently
+     * dropped every completed task that carried no completion timestamp — and
+     * that is not a rare case. It covers any task finished before the app
+     * started stamping doneAt, anything imported, and every row seeded by SQL
+     * with done = true and no doneAt in its jsonb. Somebody ticking tasks off
+     * and seeing nothing appear in Activity is exactly this.
+     *
+     * ProyTech handles it by falling back to the best real date the task
+     * already carries, and flagging the result as approximate rather than
+     * inventing one. Same here: doneAt, then the due date, then created_at.
+     *
+     * `approx` is carried through so the row can SAY the time is inferred. An
+     * inferred timestamp presented as exact is worse than no row at all in a
+     * feed somebody uses to prove when work happened.
+     */
+    const stamp = t.doneAt || t.due || t.created_at || '';
+    if (!stamp) continue;
+
     out.push({
-      id: t.id, at: t.doneAt, day: day(t.doneAt), kind: 'task',
+      id: t.id, at: stamp, day: day(stamp), kind: 'task',
       note: t.title || '', by: t.user_id || null,
       contactId: t.contact_id || null, contactName: '',
       transactionId: t.transaction_id || null,
       machine: false,
+      approx: !t.doneAt,
     });
   }
 
