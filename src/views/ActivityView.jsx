@@ -118,6 +118,31 @@ export default function ActivityView({ ctx }) {
     >
       <div className="ac-range">{fmtShort(from)} – {fmtShort(to)} · {stream.length} entr{stream.length === 1 ? 'y' : 'ies'}</div>
 
+      {/*
+        The tile row, ported from ProyTech's activity screen. It leads there
+        and it is most of why that page reads as a record rather than a feed: a
+        reverse-chronological list answers "what happened", the tiles answer
+        "how much of it", which is the question somebody opens this screen
+        with.
+
+        Total sits first and is the only one that never reads zero while there
+        is anything in the window, so the row always has an anchor.
+      */}
+      {stream.length > 0 && (
+        <div className="ac-tiles">
+          <div className="ac-tile lead">
+            <span className="ac-tile-k">Total logged</span>
+            <span className="ac-tile-v">{counts.all}</span>
+          </div>
+          {['call', 'text', 'email', 'appointment', 'note'].map(k => (
+            <div className="ac-tile" key={k}>
+              <span className="ac-tile-k">{LABEL[k] || k}</span>
+              <span className="ac-tile-v">{counts[k] || 0}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {stream.length > 0 && (
         <div className="ac-chips">
           <button className={'ac-chip' + (kind === 'all' ? ' on' : '')} onClick={() => setKind('all')}>

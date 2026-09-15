@@ -1,96 +1,119 @@
-CRM — Tasks and Activity rebuilt, plus a real bug found on the way.
-
-This zip also carries the four onboarding gaps from the previous one. If you
-have not uploaded that yet, this supersedes it — upload this instead.
+TASKS + ACTIVITY — matched to ProyTech's CRM, and the reason last time did
+nothing.
 
 UPLOAD
-  Drag the FOUR FOLDERS -- api, src, tests -- on together. Do not open them.
+  Drag the TWO FOLDERS -- api and src -- on together. Do not open them.
   Commit, then redeploy. Nothing to delete.
   Do not drag this file in.
 
 --------------------------------------------------------------------------
-THE BUG. 22 BROKEN PILLS ACROSS SIX SCREENS.
+WHY NOTHING CHANGED LAST TIME
 --------------------------------------------------------------------------
 
-    <Pill color="${BRAND.colors.indigo}">
+src/styles.js in the repo had ZERO of the task CSS in it. There is a commit
+called "Update styles.js" that replaced the file, so every class the new markup
+used -- .tkr, .tk-sec, .tk-cap, .ac-chips, all of it -- had no rule behind it.
 
-In JSX that is a PLAIN STRING, not a template literal. Every one of those
-pills was handed the eleven characters "${BRAND.co..." as a CSS colour, which
-is invalid, so the browser dropped it and the pill fell back to grey.
+The components shipped. The stylesheet did not. Unstyled markup renders as a
+plain stack of divs, which is exactly what you saw, and nothing errors, so
+there was nothing to catch it.
 
-Twenty-two of them, in Dashboard, Commission, Tools, Books, PCS and Tasks.
-That is a real part of why these screens looked washed out: the colour coding
-that was supposed to separate overdue from upcoming, won from lost, simply was
-not painting. Fixed to color={BRAND.colors.indigo} everywhere.
-
-It builds clean either way, which is why it survived. Nothing errors when you
-give an element an invalid colour.
+All of it is appended at the END of the CSS template now rather than inserted
+at an anchor, so a future full-file replacement of styles.js cannot silently
+drop it again without the loss being obvious.
 
 --------------------------------------------------------------------------
-TASKS, REBUILT
+WHAT NOW MATCHES PROYTECH
 --------------------------------------------------------------------------
 
-  a filter bar with live counts: Open / Done, then All, Overdue, Today,
-    Next 7, No date -- counted over OPEN tasks, because a chip that counts
-    finished work is a chip nobody clicks twice
-  a FOCUS list, capped at 6, above everything else
-  per-row actions: focus, dials, delete
-  impact / urgency / effort on manual tasks
+  Today / Tomorrow / date quick-pick on the add row
+  Three filter segments -- Mine/Everyone, Open/Done/All, and
+    Due today / Upcoming / No date / All, each with a live count
+  AI RANK, with Clear ranking, the #1 #2 #3 badges and the one-line reason
+    under each title
+  FOCUS and FREE TIME as sections with a soft 6 cap
+  the "picked 3x" badge
+  tap-the-date-chip to reschedule without opening anything
+  the overdue banner and the no-date hint under the filter row
 
-FOCUS IS PORTED WHOLE FROM PROYTECH, because the mechanism is better than a
-boolean: it stores the DAY it was set rather than true, so it expires on its
-own with no nightly job, no timer, and it is still correct if nobody opens the
-CRM for three days. The day rolls at 4am so working late does not clear the
-list out from under you mid-evening. Picking a task counts once per day
-however many times it is toggled.
+FOCUS IS PORTED WHOLE because the mechanism is better than a boolean: it
+stores the DAY it was set, so it expires on its own with no nightly job and is
+still correct if nobody opens the CRM for three days. Rolls at 4am so working
+late does not clear the list mid-evening. Picking counts once per day however
+many times it is toggled -- which is what makes "picked 3x" mean anything.
 
-WHAT I DID NOT PORT, AND WHY. ProyTech scores EVERY task on three dials and
-AI-ranks over them. That exists because ProyTech's tasks are freeform and
-mostly undated -- something has to decide what comes first.
+THE SOFT CAP warns at six and never blocks. A cap that refuses you at 4pm when
+something urgent lands is how a tool gets abandoned.
 
-Half the tasks here are not freeform. Contracts.jsx writes one per contract
-deadline, off a real clause, with a real date. The date already IS the
-urgency, and asking somebody to score a task the contract scored is work for
-its own sake. So the dials appear on MANUAL tasks and never on deadline ones,
-and Focus orders each by what is actually known about it: a deadline by how
-close its date is, a manual one by impact times urgency.
+"picked 3x" is the most useful thing on the screen. A task pulled into Focus on
+three separate days and still open is blocked or badly scoped, and nothing else
+in the product surfaces that.
 
-Deliberately NOT one blended score across both. A contract deadline three days
-out and a typed task somebody rated 5 are not comparable quantities, and
-pretending they are produces a confident ordering nobody can explain.
+--------------------------------------------------------------------------
+AI RANKING — NEW ENDPOINT, DIFFERENT PROMPT
+--------------------------------------------------------------------------
+
+api/rank-tasks.js is new. The endpoint is ported; the PROMPT is rewritten.
+
+ProyTech's ranks against "collect $10,000 in cash within 3 weeks", which is
+ProyTech's own sprint goal and means nothing to a real estate agent. Copying it
+verbatim would have produced confident rankings against somebody else's
+business objective, which is worse than no ranking at all.
+
+Alex's ranks against keeping deals alive and leads warm, in this order:
+  1. contract deadlines -- off a real clause, usually not recoverable
+  2. speed to lead -- an uncontacted lead decays in hours, not days
+  3. keeping a live deal moving
+  4. work that wins the next deal
+  5. everything else by impact x urgency, lower effort breaking ties
+
+It is behind guard() with requireAuth, per-IP limits and `spends: true`, so it
+sits inside the SAME daily dollar ceiling as jarvis, ai, extract-contract and
+parse-receipt rather than opening a fifth budget.
+
+Hallucinated or duplicate ids are filtered against what was sent, so the worst
+case is a partial ranking the screen handles, not a wrong one.
+
+A missing API key returns ok:false and the screen says so plainly and keeps
+sorting by impact x urgency. Unconfigured is a setup state, not an error.
+
+--------------------------------------------------------------------------
+THE ONE DELIBERATE DIFFERENCE
+--------------------------------------------------------------------------
+
+ProyTech scores every task on three dials by hand. Half the tasks here are not
+typed by anybody -- Contracts.jsx writes one per contract deadline, off a real
+clause, with a real date. The date already IS the urgency.
+
+So the dials are editable on MANUAL tasks and hidden on deadline ones, and the
+ranking prompt is told a contract deadline outranks a judgement call. Asking
+somebody to rate a task the contract already rated is work for its own sake.
 
 --------------------------------------------------------------------------
 ACTIVITY
 --------------------------------------------------------------------------
 
-A counts strip with per-kind filtering: All, Calls, Texts, Emails,
-Appointments, Notes, Feedback, Tasks, Imports. Ordered by what Alex actually
-does rather than alphabetically, and a kind with nothing in it is not rendered
-at all -- an empty chip is a dead control.
-
-Counts are computed AFTER the date and person filters but BEFORE the kind
-filter, so clicking Calls does not zero the other numbers and leave nothing to
-click back to.
-
-A bare reverse-chronological list answers "what happened". The counts answer
-"how much of it", which is the question somebody opens this screen with.
+The ProyTech tile row -- Total logged, Calls, Texts, Emails, Appointments,
+Notes -- plus per-kind filter chips. Counts are computed AFTER the date and
+person filters and BEFORE the kind filter, so clicking Calls does not zero
+every other number and leave nothing to click back to. A kind with nothing in
+it is not rendered; an empty chip is a dead control.
 
 --------------------------------------------------------------------------
-ONE THING WORTH KNOWING
+ALSO IN HERE
 --------------------------------------------------------------------------
 
-The tab walker reports Tasks at 221 characters in the DEMO build, because the
-demo seed contains no tasks and no activity. That is part of why those two
-screens looked so bare when you clicked through. Alex's real install has the
-seeded data, so it will not look like that for him -- but it is worth seeding
-the demo if the demo is ever shown to anyone.
-
-ALSO IN HERE, from the onboarding audit:
-  speed-to-lead and stage timings   src/lib/velocity.js + a dashboard section
-  lost reasons and motivation       settings, contact record
-  new leads email Alex              api/lead-intake.js
-  See the previous zip's notes for the reasoning on each.
+db.upsertTasks() -- a bulk writer. Ranking rewrites every open task at once,
+which is forty round trips one at a time, and forty chances to end up
+half-ranked. Same row shape as upsertTask, deliberately: two writers building
+the row two different ways is how a column quietly stops being written on one
+path.
 
 VERIFIED
-  657 checks pass, including the tab walker confirming Tasks and Activity both
+  661 checks pass, including the tab walker confirming Tasks and Activity both
   render with no NaN and no undefined. Build compiles.
+
+AFTER DEPLOYING
+  Tasks and Activity look bare on an install with no data. Add one task, then
+  hit the target icon on it to see Focus. AI rank needs ANTHROPIC_API_KEY,
+  which is already set on this project.

@@ -203,6 +203,27 @@ export const db = {
     });
     if (error) throw error;
   },
+
+  /*
+   * Many tasks in one round trip.
+   *
+   * AI ranking rewrites every open task at once — it sets aiRank on the ones
+   * it ordered and clears it on the rest, so a list of forty tasks is forty
+   * writes if done one at a time. That is forty round trips and forty chances
+   * for the list to be half-ranked if one fails partway.
+   *
+   * Same row shape as upsertTask above, deliberately: two writers that build
+   * the row two different ways is how a column quietly stops being written on
+   * one path.
+   */
+  async upsertTasks(list) {
+    if (!Array.isArray(list) || !list.length) return;
+    const { error } = await supabase.from('tasks').upsert(list.map(t => ({
+      id: t.id, user_id: t.user_id, transaction_id: t.transaction_id || null,
+      contact_id: t.contact_id || null, due: t.due || null, done: !!t.done, data: strip(t),
+    })));
+    if (error) throw error;
+  },
   async deleteTask(id) {
     const { error } = await supabase.from('tasks').delete().eq('id', id);
     if (error) throw error;

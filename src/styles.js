@@ -1385,4 +1385,100 @@ button,a,label,select,input,textarea,.kcard,.fu-card,.cli-card,.rt-person,.msec-
 .tbl.sc .sc-sub{font-size:10.5px;color:#9b98ad;margin-top:1px;font-weight:500}
 .tbl.sc .sc-none{color:#C9C5D9}
 .tbl.sc .sc-bad{color:#B03030;font-weight:700}
+
+/* ==========================================================================
+   TASKS — ported from ProyTech's task screen.
+
+   These were missing entirely: the markup shipped and the stylesheet did not,
+   so every one of these classes was rendering unstyled. That is why the screen
+   looked unchanged after the rewrite.
+   ========================================================================== */
+.tk-add2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tk-add2 > *:first-child{flex:1 1 260px}
+.tk-daypick{display:flex;align-items:center;gap:6px}
+.day-chip{border:1px solid #E1E2EC;background:#fff;border-radius:9px;padding:9px 12px;
+  font:inherit;font-size:12.5px;font-weight:700;color:#56527a;cursor:pointer}
+.day-chip.on{border-color:${COBALT};background:color-mix(in srgb,${COBALT} 8%,#fff);color:${COBALT}}
+.day-date{position:relative;display:inline-flex;align-items:center;gap:6px;border:1px solid #E1E2EC;
+  background:#fff;border-radius:9px;padding:9px 11px;font-size:12.5px;color:#56527a;cursor:pointer}
+.day-date input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+
+.tk-bar2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tk-bar2-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.seg-n{margin-left:6px;font-size:10.5px;font-weight:800;opacity:.62}
+.seg-b.on .seg-n{opacity:.9}
+
+.tk-hint{display:flex;align-items:center;gap:8px;font-size:13px;color:#5A5680;background:#F4F5FA;
+  border:1px solid #E4E5EF;border-radius:12px;padding:10px 13px;margin-bottom:14px}
+.tk-hint.late{color:${RED};background:${alpha(RED,.08)};border-color:${alpha(RED,.2)};font-weight:600}
+.tk-hint.warn{color:#9A5B18;background:${alpha(GOLD,.12)};border-color:${alpha(GOLD,.3)};font-weight:600}
+.tk-hint.ai{color:#1a7d46;background:rgba(31,157,85,.1);border-color:rgba(31,157,85,.22);font-weight:600}
+
+.tk-sec{display:flex;align-items:center;gap:10px;margin:6px 0 12px;flex-wrap:wrap}
+.tk-sec.free{margin-top:26px;padding-top:20px;border-top:1px solid #E8E9F2}
+.tk-sec h3{display:flex;align-items:center;gap:7px;font-family:'Space Grotesk';font-size:15px;
+  font-weight:600;color:${INK};margin:0}
+.tk-sec h3 svg{color:${COBALT}}
+.tk-sec-sub{font-size:12px;color:#9b98ad;margin-left:auto}
+.tk-cap{font-size:12px;font-weight:700;color:#6a6788;background:#F0F1F7;border-radius:20px;
+  padding:3px 10px;font-variant-numeric:tabular-nums}
+.tk-cap.over{background:${alpha(GOLD,.18)};color:#9A5B18}
+.tk-cap.plain{color:#8b88a0;font-weight:600}
+.tk-cap-note{font-size:12.5px;color:#9A5B18;font-weight:500}
+
+.tk-list{display:flex;flex-direction:column;gap:9px}
+.tkr{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E7E8F1;
+  border-radius:12px;padding:13px 15px}
+.tkr:hover{border-color:#D8D9E6}
+.tkr-check{background:none;border:0;cursor:pointer;padding:0;margin-top:1px;flex:none}
+.tkr-mid{flex:1;min-width:0}
+.tkr-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tkr-rank{background:${INK};color:#fff;font-weight:700;font-size:11px;border-radius:20px;
+  padding:2px 8px;font-variant-numeric:tabular-nums}
+.tkr-title{font-weight:600;color:${INK};font-size:15px;line-height:1.35}
+.tkr-title.done{text-decoration:line-through;color:#9B98AD;font-weight:500}
+.tkr-why{font-size:12.5px;color:${COBALT};margin-top:4px;display:flex;align-items:center;gap:5px}
+.tkr-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;align-items:center;font-size:11.5px}
+.tkr-due{position:relative;display:inline-flex;align-items:center;gap:5px;font-size:11px;
+  font-weight:600;padding:3px 9px;border-radius:20px;cursor:pointer}
+.tkr-due input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.tkr-picked{font-size:11px;font-weight:600;color:#9A5B18;background:${alpha(GOLD,.14)};
+  border-radius:20px;padding:3px 9px;cursor:help}
+.tkr-dials{font-size:11px;color:#a6a2bc}
+.tkr-acts{display:flex;gap:4px;flex:none}
+.tkr-act{width:30px;height:30px;border:1px solid #E7E8F1;background:#fff;border-radius:8px;
+  cursor:pointer;color:#B9B6CA;display:inline-flex;align-items:center;justify-content:center}
+.tkr-act:hover{border-color:#C9CBDD;color:${COBALT}}
+.tkr-act.on{color:${GOLD};border-color:${alpha(GOLD,.5)};background:${alpha(GOLD,.1)}}
+.tkr-act.del:hover{color:${RED};border-color:${alpha(RED,.35)}}
+.tk-origin{display:inline-flex;align-items:center;gap:4px;border:1px solid #E4E5EF;background:#F7F8FC;
+  border-radius:20px;padding:3px 9px;font:inherit;font-size:11px;color:#56527a;cursor:pointer}
+.tk-origin:hover{border-color:${COBALT};color:${COBALT}}
+.tk-dials{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;padding-top:8px;border-top:1px dashed #E7E8F1}
+.tk-dial{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6885;font-weight:650}
+.tk-dial select{padding:3px 6px;font-size:12px}
+
+.spin{animation:tkspin 1s linear infinite}
+@keyframes tkspin{to{transform:rotate(360deg)}}
+
+/* --- ACTIVITY: the counts strip ------------------------------------------ */
+.ac-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:9px;
+  margin:4px 0 14px}
+.ac-tile{background:#fff;border:1px solid #E7E8F1;border-radius:11px;padding:11px 13px}
+.ac-tile.lead{background:${COBALT};border-color:${COBALT}}
+.ac-tile-k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;color:#8E89A8}
+.ac-tile.lead .ac-tile-k{color:rgba(255,255,255,.75)}
+.ac-tile-v{display:block;font-size:22px;font-weight:700;color:${INK};margin-top:3px;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.ac-tile.lead .ac-tile-v{color:#fff}
+.ac-chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 12px;margin-bottom:4px;
+  border-bottom:1px solid #EDEEF5}
+.ac-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #E4E5EF;background:#fff;
+  border-radius:20px;padding:5px 11px;font:inherit;font-size:12px;font-weight:650;
+  color:#56527a;cursor:pointer;line-height:1.2}
+.ac-chip:hover{border-color:#C9CBDD}
+.ac-chip.on{background:${COBALT};border-color:${COBALT};color:#fff}
+.ac-chip-n{background:#EEF0F7;color:#56527a;border-radius:20px;padding:0 6px;font-size:11px}
+.ac-chip.on .ac-chip-n{background:rgba(255,255,255,.22);color:#fff}
 `;

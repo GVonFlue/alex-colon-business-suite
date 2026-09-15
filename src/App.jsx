@@ -235,6 +235,13 @@ export default function App() {
     await guard(() => db.upsertTask(t));
   }, [guard]);
 
+  /* The whole open list at once, for AI ranking. Optimistic like every other
+     writer here: state first so the ranking appears immediately, then persist. */
+  const saveTasks = useCallback(async list => {
+    setTasks(list);
+    await guard(() => db.upsertTasks(list));
+  }, [guard]);
+
   const deleteTask = useCallback(async id => {
     setTasks(list => list.filter(x => x.id !== id));
     await guard(() => db.deleteTask(id));
@@ -370,7 +377,7 @@ export default function App() {
     settings, saveSettings,
     contacts, upsertContact, deleteContact, claimContact,
     transactions, upsertTransaction, deleteTransaction,
-    tasks, upsertTask, deleteTask,
+    tasks, upsertTask, saveTasks, deleteTask,
     expenses, upsertExpense, deleteExpense,
     contracts, saveContract, removeContract,
     huddle, saveHuddle,
@@ -383,7 +390,7 @@ export default function App() {
        which creates a login for a new seat. No other view may touch it. */
     db, auth,
   }), [me, users, account, isLeader, isCoordinator, can, perms, settings, saveSettings, contacts, upsertContact,
-    deleteContact, claimContact, transactions, upsertTransaction, deleteTransaction, tasks, upsertTask,
+    deleteContact, claimContact, transactions, upsertTransaction, deleteTransaction, tasks, upsertTask, saveTasks,
     deleteTask, expenses, upsertExpense, deleteExpense, contracts, saveContract, removeContract,
     huddle, saveHuddle, tz, go, params, flash, loading]);
 
